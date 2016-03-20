@@ -2,13 +2,13 @@
 Translator from APS 11-ID-B SPEC data and images into the NSLS-II stack
 
 ## NSLS-II stack
-The [NSLS-II](www.github.com/NSLS-II) stack consists of the following projects:
-- [metadatastore](www.github.com/NSLS-II/metadatastore) which holds 
+The [NSLS-II](https://github.com/nsls-ii) stack consists of the following projects:
+- [metadatastore](https://github.com/nsls-ii/metadatastore) which holds 
 experiment metadata in a mongodb
-- [filestore](www.github.com/NSLS-II/filestore) which holds the paths for 
+- [filestore](https://github.com/nsls-ii/filestore) which holds the paths for 
 large files (e.g. images) and has a handler system to load the data in a 
 flexable and agnostic way
-- [databroker](www.github.com/NSLS-II/databroker) which provides a convient 
+- [databroker](https://github.com/nsls-ii/databroker) which provides a convient 
 way to load the data in from the previous two databases
 
 ## Utilities beyond the NSLS-II stack
