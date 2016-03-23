@@ -20,12 +20,12 @@ The plan:
 7. Repeat for all data sets
 
 """
-from metadatastore.api import insert_event, insert_descriptor, \
-    insert_run_start, insert_run_stop
 from uuid import uuid4
+
+import numpy as np
 from filestore.api import insert_resource, insert_datum, register_handler
 from filestore.handlers_base import HandlerBase
-import numpy as np
+from metadatastore.api import insert_event, insert_run_start, insert_run_stop
 
 
 class TiffHandler(HandlerBase):
@@ -55,15 +55,17 @@ if __name__ == '__main__':
     kwargs = 'GIANT BLOB FROM CONFIG FILE'
 
     # Load all the metadata files in the folder
-    metadata_files = [os.path.join(insert_folder, f) for f in os.listdir() if
-                      f.endswith('.tif.metadata')]
-    metadata_data = [parse_tif_metadata(f) for f in metadata_files]
+    tiff_metadata_files = [os.path.join(insert_folder, f) for f in os.listdir()
+                           if
+                           f.endswith('.tif.metadata')]
+    tiff_metadata_data = [parse_tif_metadata(f) for f in tiff_metadata_files]
 
     # Sort the folder's data by time so we can have the start time
-    timestamp_list = [f['timestamp'] for f in metadata_data]
+    timestamp_list = [f['timestamp'] for f in tiff_metadata_data]
 
+    # 3. Create the run_start document.
     run_start_uid = insert_run_start(time=min(timestamp_list), scan_id=1,
-                                     beamline_id='example',
+                                     beamline_id='11-ID-B',
                                      uid=str((uuid4()), **kwargs))
 
     data_keys1 = {'I0': dict(source='IO', dtype='number'),
@@ -79,10 +81,23 @@ if __name__ == '__main__':
         run_start=run_start_uid, data_keys=data_keys2, time=0.,
         uid=str(uuid4()))
 
-    # read in all the remaining data
+    # read in all the remaining data namely image file names
+    tiff_file_names = [f[:-9] for f in tiff_metadata_files]
+
     # sort remaining data by time
+    sorted_tiff_metadata_data = [x for (y, x) in sorted(
+        zip(timestamp_list, tiff_metadata_data))]
+
+    sorted_tiff_file_names = [x for (y, x) in sorted(
+            zip(timestamp_list, tiff_file_names))]
+
+    # make subset of spec data for this run
+    ti = sorted_tiff_metadata_data[0]['time_from_date']
+    tf =
+
 
     # insert all the temperature data
+    temperature_data = []
     for idx, (temp, t) in enumerate(zip(temperature_data, time_data)):
         insert_event(descriptor=descriptor2_uid, time=t, data={'T': temp},
                      uid=str(uuid4()),
