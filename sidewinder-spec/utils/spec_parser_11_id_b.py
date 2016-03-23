@@ -20,6 +20,7 @@ def parse_spec_scan(scan):
         c = c.strip()
         scan_dict['time_from_date'] = datetime.strptime(c,
                                                         '%a %b %d %H:%M:%S %Y')
+
         return scan_dict
 
 
