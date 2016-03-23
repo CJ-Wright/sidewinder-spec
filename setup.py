@@ -1,10 +1,10 @@
 from setuptools import setup
 
 setup(
-    name='sidewinder-spec',
+    name='sidewinder_spec',
     version='',
     packages=['', 'utils', 'side_loader'],
-    package_dir={'': 'sidewinder-spec'},
+    package_dir={'': 'sidewinder_spec'},
     url='',
     license='',
     author='Christopher J. Wright',
