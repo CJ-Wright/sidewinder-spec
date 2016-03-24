@@ -18,36 +18,45 @@ The plan:
 7. Repeat for all data sets
 
 """
-# from filestore.api import insert_resource, insert_datum, register_handler
-# from filestore.handlers_base import HandlerBase
 import numpy as np
 from uuid import uuid4
 
 if __name__ == '__main__':
     import os
-    from sidewinder_spec.utils.spec_parser_11_id_b import parse_spec_file
-    from sidewinder_spec.utils.tiff_md_parser import parse_tif_metadata
+    from utils.parsers import parse_spec_file, parse_tif_metadata, \
+        parse_tif_metadata, parse_run_config
     from xpd_workflow.vis import StackExplorer
     import matplotlib.pyplot as plt
 
+    root_folder = '/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/'
+
     # 1. Load up all the SPEC metadata
-    spec_file_loc = '/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/EmirMar16'
+    spec_file_loc = os.path.join(root_folder, 'EmirMar16')
     spec_data = parse_spec_file(spec_file_loc)
     print len(spec_data)
 
-    section_start_times = np.asarray([section[0]['time_from_date'] for section in spec_data])
+    section_start_times = np.asarray(
+        [section[0]['time_from_date'] for section in spec_data])
 
-    run_folders = ['/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/S1/temp_exp',
-                   '/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/S6']
+    run_folders = [os.path.join(root_folder, f) for f in [
+        # 'Quartz_Background/temp_exp'
+        'S1/temp_exp',
+        # 'S6'
+    ]]
+
     for run_folder in run_folders:
         # 2. Load each run_start configuration file, which we write currently in each dir
-        # config_file = os.path.join(run_folder, 'config.txt')
-        # kwargs = 'GIANT BLOB FROM CONFIG FILE'
+
+        config_file = os.path.join(run_folder, 'config.txt')
+        run_config = parse_run_config(config_file)
+        kwargs = run_config
 
         # Load all the metadata files in the folder
-        tiff_metadata_files = [os.path.join(run_folder, f) for f in os.listdir(run_folder)
+        tiff_metadata_files = [os.path.join(run_folder, f) for f in
+                               os.listdir(run_folder)
                                if f.endswith('.tif.metadata')]
-        tiff_metadata_data = [parse_tif_metadata(f) for f in tiff_metadata_files]
+        tiff_metadata_data = [parse_tif_metadata(f) for f in
+                              tiff_metadata_files]
 
         # Sort the folder's data by time so we can have the start time
         timestamp_list = [f['timestamp'] for f in tiff_metadata_data]
@@ -60,7 +69,7 @@ if __name__ == '__main__':
             zip(timestamp_list, tiff_metadata_data))]
 
         sorted_tiff_file_names = [x for (y, x) in sorted(
-                zip(timestamp_list, tiff_file_names))]
+            zip(timestamp_list, tiff_file_names))]
 
         # make subset of spec data for this run
         ti = sorted_tiff_metadata_data[0]['time_from_date']
@@ -70,26 +79,35 @@ if __name__ == '__main__':
         sub_spec = spec_data[spec_start_idx]
 
         # 3. Create the run_start document.
-        print 'Run Start goes here'
+        run_start_uid = dict(time=min(timestamp_list), scan_id=1,
+                             beamline_id='11-ID-B',
+                             uid=str(uuid4()), background=False,
+                             calibration=False,
+                             **kwargs)
 
         data_keys1 = {'I0': dict(source='IO', dtype='number'),
-                      'img': dict(source='det', dtype='array', shape=(2048, 2048),
-                                  external='FILESTORE:')}
+                      'img': dict(source='det', dtype='array',
+                                  shape=(2048, 2048),
+                                  external='FILESTORE:'),
+                      'detz': dict(source='detz', dtype='number')}
+
         data_keys2 = {'T': dict(source='T', dtype='number'),}
 
-        print 'Event descriptors go here'
-        print data_keys1
-        print data_keys2
+        descriptor1_uid = dict(run_start=run_start_uid, data_keys=data_keys1,
+                               time=0., uid=str(uuid4()))
+        descriptor2_uid = dict(run_start=run_start_uid, data_keys=data_keys2,
+                               time=0.,uid=str(uuid4()))
+        print descriptor1_uid
+        print descriptor2_uid
 
         # insert all the temperature data
         temperature_data = [scan['T'] for scan in sub_spec]
         time_data = [scan['time_from_date'] for scan in sub_spec]
 
         for idx, (temp, t) in enumerate(zip(temperature_data, time_data)):
-            tmp_dict = {'descriptor':'descriptor2_uid', 'time':t, 'data':{'T': temp},
-                         'uid':str(uuid4()),
-                         'timestamps':{'T': t}, 'seq_num':idx}
-            print tmp_dict
+            print dict(descriptor=descriptor2_uid, time=t, data={'T': temp},
+                     uid=str(uuid4()),
+                     timestamps={'T': t}, seq_num=idx)
 
         # insert the images
         I0 = [scan['I00'] for scan in sub_spec]
@@ -99,11 +117,11 @@ if __name__ == '__main__':
             fs_uid = uuid4()
             # resource = insert_resource('TIFF', img_name)
             # insert_datum(resource, fs_uid)
-            data = {'img': fs_uid, 'I0': I}
+            dz = float(os.path.split(os.path.splitext(img_name)[0])[-1][1:3])
+            data = {'img': fs_uid, 'I0': I, 'detz':dz}
             timestamps = {'img': timestamp, 'I0': timestamp}
-            tmp_dict = {'descriptor':'descriptor1_uid', 'time':timestamp, 'data':data,
-                         'uid':str(uuid4()), 'timestamps':timestamps, 'seq_num':idx}
-            print tmp_dict
+            print dict(descriptor=descriptor1_uid, time=timestamp, data=data,
+                     uid=str(uuid4()), timestamps=timestamps, seq_num=idx)
         print "Run Stop goes here"
-        plt.plot(time_data, temperature_data)
+        plt.plot(temperature_data, time_data)
         plt.show()

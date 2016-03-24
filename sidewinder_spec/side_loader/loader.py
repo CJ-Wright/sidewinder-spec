@@ -24,26 +24,12 @@ from uuid import uuid4
 
 import numpy as np
 from filestore.api import insert_resource, insert_datum, register_handler
-from filestore.handlers_base import HandlerBase
-from metadatastore.api import insert_event, insert_run_start, insert_run_stop
-
-
-class TiffHandler(HandlerBase):
-    specs = {'TIFF'} | HandlerBase.specs
-
-    def __init__(self, name):
-        self._name = name
-
-    def __call__(self):
-        return tifffile.read(self._name)
-
-
-register_handler('TIFF', TiffHandler)
+from metadatastore.api import insert_event, insert_run_start, insert_run_stop, \
+    insert_descriptor
 
 if __name__ == '__main__':
     import os
-    from utils.spec_parser_11_id_b import parse_spec_file
-    from utils.tiff_md_parser import parse_tif_metadata
+    from utils.parsers import parse_spec_file, parse_tif_metadata
 
     # 1. Load up all the SPEC metadata
     spec_file_loc = ''
@@ -52,6 +38,7 @@ if __name__ == '__main__':
     # 2. Load each run_start configuration file, which we write currently in each dir
     insert_folder = ''
     config_file = os.path.join(insert_folder, 'config.txt')
+
     kwargs = 'GIANT BLOB FROM CONFIG FILE'
 
     # Load all the metadata files in the folder
@@ -66,18 +53,22 @@ if __name__ == '__main__':
     # 3. Create the run_start document.
     run_start_uid = insert_run_start(time=min(timestamp_list), scan_id=1,
                                      beamline_id='11-ID-B',
+                                     group='Zhou',
+                                     project='PNO',
                                      uid=str((uuid4()), **kwargs))
 
     data_keys1 = {'I0': dict(source='IO', dtype='number'),
                   'img': dict(source='det', dtype='array', shape=(2048, 2048),
-                              external='FILESTORE:')}
+                              external='FILESTORE:'),
+                  'detz': dict(source='detz', dtype='number')}
+
     data_keys2 = {'T': dict(source='T', dtype='number'),}
 
-    descriptor1_uid = insert_event_descriptor(
+    descriptor1_uid = insert_descriptor(
         run_start=run_start_uid, data_keys=data_keys1, time=0.,
         uid=str(uuid4()))
 
-    descriptor2_uid = insert_event_descriptor(
+    descriptor2_uid = insert_descriptor(
         run_start=run_start_uid, data_keys=data_keys2, time=0.,
         uid=str(uuid4()))
 
@@ -89,12 +80,10 @@ if __name__ == '__main__':
         zip(timestamp_list, tiff_metadata_data))]
 
     sorted_tiff_file_names = [x for (y, x) in sorted(
-            zip(timestamp_list, tiff_file_names))]
+        zip(timestamp_list, tiff_file_names))]
 
     # make subset of spec data for this run
     ti = sorted_tiff_metadata_data[0]['time_from_date']
-    tf =
-
 
     # insert all the temperature data
     temperature_data = []
