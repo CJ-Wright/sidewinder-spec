@@ -2,11 +2,14 @@ import numpy as np
 from uuid import uuid4
 import os
 from sidewinder_spec.utils.parsers import parse_spec_file, \
-    parse_tif_metadata, \
-    parse_tif_metadata, parse_run_config
+    parse_tif_metadata, parse_tif_metadata, parse_run_config
+from metadatastore.api import insert_event, insert_run_start, insert_run_stop, \
+    insert_descriptor
+from filestore.api import insert_resource, insert_datum, register_handler
 
 
-def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs):
+def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
+                   dry_run=True):
     # Load all the metadata files in the folder
     tiff_metadata_files = [os.path.join(run_folder, f) for f in
                            os.listdir(run_folder)
@@ -23,7 +26,6 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs):
     # sort remaining data by time
     sorted_tiff_metadata_data = [x for (y, x) in sorted(
         zip(timestamp_list, tiff_metadata_data))]
-
     sorted_tiff_file_names = [x for (y, x) in sorted(
         zip(timestamp_list, tiff_file_names))]
 
@@ -34,12 +36,23 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs):
     spec_start_idx = np.argmin(np.abs(section_start_times - ti))
     sub_spec = spec_data[spec_start_idx]
 
+    resource = insert_resource('TIFF', run_kwargs[''])
+    insert_datum(resource, uuid4())
+
     # 3. Create the run_start document.
-    run_start_uid = dict(time=min(timestamp_list), scan_id=1,
-                         beamline_id='11-ID-B',
-                         uid=str(uuid4()), background=False,
-                         calibration=False,
-                         **run_kwargs)
+    # Note we need to associate any background run headers with this run header
+    run_start_dict = dict(time=min(timestamp_list), scan_id=1,
+                          beamline_id='11-ID-B',
+                          uid=str(uuid4()),
+                          background=False,
+                          calibration=False,
+                          **run_kwargs)
+    if dry_run:
+        run_start_uid = uuid4()
+        print run_start_dict
+    else:
+        run_start_uid = insert_run_start(**run_start_dict)
+        print run_start_uid
 
     data_keys1 = {'I0': dict(source='IO', dtype='number'),
                   'img': dict(source='det', dtype='array',
@@ -49,21 +62,33 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs):
 
     data_keys2 = {'T': dict(source='T', dtype='number'),}
 
-    descriptor1_uid = dict(run_start=run_start_uid, data_keys=data_keys1,
-                           time=0., uid=str(uuid4()))
-    descriptor2_uid = dict(run_start=run_start_uid, data_keys=data_keys2,
-                           time=0., uid=str(uuid4()))
-    print descriptor1_uid
-    print descriptor2_uid
+    descriptor1_dict = dict(run_start=run_start_uid, data_keys=data_keys1,
+                            time=0., uid=str(uuid4()))
+    descriptor2_dict = dict(run_start=run_start_uid, data_keys=data_keys2,
+                            time=0., uid=str(uuid4()))
+    if dry_run:
+        descriptor1_uid = uuid4()
+        descriptor2_uid = uuid4()
+        print descriptor1_dict
+        print descriptor2_dict
+    else:
+        descriptor1_uid = insert_descriptor(**descriptor1_dict)
+        descriptor2_uid = insert_descriptor(**descriptor2_dict)
+        print descriptor1_uid
+        print descriptor2_uid
 
     # insert all the temperature data
     temperature_data = [scan['T'] for scan in sub_spec]
     time_data = [scan['time_from_date'] for scan in sub_spec]
 
     for idx, (temp, t) in enumerate(zip(temperature_data, time_data)):
-        print dict(descriptor=descriptor2_uid, time=t, data={'T': temp},
-                   uid=str(uuid4()),
-                   timestamps={'T': t}, seq_num=idx)
+        event_dict = dict(descriptor=descriptor2_uid, time=t, data={'T': temp},
+                          uid=str(uuid4()),
+                          timestamps={'T': t}, seq_num=idx)
+
+        print event_dict
+        if not dry_run:
+            insert_event(**event_dict)
 
     # insert the images
     I0 = [scan['I00'] for scan in sub_spec]
@@ -71,20 +96,31 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs):
     for idx, (img_name, I, timestamp) in enumerate(
             zip(sorted_tiff_file_names, I0, time_data)):
         fs_uid = uuid4()
-        # resource = insert_resource('TIFF', img_name)
-        # insert_datum(resource, fs_uid)
         dz = float(os.path.split(os.path.splitext(img_name)[0])[-1][1:3])
         data = {'img': fs_uid, 'I0': I, 'detz': dz}
         timestamps = {'img': timestamp, 'I0': timestamp}
-        print dict(descriptor=descriptor1_uid, time=timestamp, data=data,
-                   uid=str(uuid4()), timestamps=timestamps, seq_num=idx)
-    print "Run Stop goes here"
+        event_dict = dict(descriptor=descriptor1_uid, time=timestamp,
+                          data=data,
+                          uid=str(uuid4()), timestamps=timestamps, seq_num=idx)
+        print event_dict
+        if not dry_run:
+            resource = insert_resource('TIFF', img_name)
+            insert_datum(resource, fs_uid)
+            insert_event(**event_dict)
 
+    if dry_run:
+        print "Run Stop goes here"
+    else:
+        insert_run_stop(run_start=run_start_uid, time=np.max(timestamps),
+                        uid=str(uuid4()))
+    return run_start_uid
 
-def dd_sample_changer_loader(run_folder, spec_data, section_start_times, run_kwargs):
+def dd_sample_changer_loader(run_folder, spec_data, section_start_times,
+                             run_kwargs):
     pass
 
+
 run_loaders = {
-    'dd_temp':temp_dd_loader,
+    'temp_dd': temp_dd_loader,
     'dd_sample_changer': dd_sample_changer_loader
 }
