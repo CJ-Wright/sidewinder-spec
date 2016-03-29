@@ -29,7 +29,8 @@ from metadatastore.api import insert_event, insert_run_start, insert_run_stop, \
 
 if __name__ == '__main__':
     import os
-    from utils.parsers import parse_spec_file, parse_tif_metadata
+    from sidewinder_spec.utils.parsers import parse_spec_file, \
+        parse_tif_metadata
 
     # 1. Load up all the SPEC metadata
     spec_file_loc = ''
