@@ -86,5 +86,5 @@ def dd_sample_changer_loader(run_folder, spec_data, section_start_times, run_kwa
 
 run_loaders = {
     'dd_temp':temp_dd_loader,
-    'sample_changer': dd_sample_changer_loader
+    'dd_sample_changer': dd_sample_changer_loader
 }
