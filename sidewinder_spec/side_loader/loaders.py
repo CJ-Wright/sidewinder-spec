@@ -45,7 +45,7 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
                           calibration=False,
                           **run_kwargs)
     if dry_run:
-        run_start_uid = uuid4()
+        run_start_uid = run_start_dict['uid']
         print run_start_dict
     else:
         run_start_uid = insert_run_start(**run_start_dict)
@@ -64,8 +64,8 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
     descriptor2_dict = dict(run_start=run_start_uid, data_keys=data_keys2,
                             time=0., uid=str(uuid4()))
     if dry_run:
-        descriptor1_uid = uuid4()
-        descriptor2_uid = uuid4()
+        descriptor1_uid = descriptor1_dict['uid']
+        descriptor2_uid = descriptor1_dict['uid']
         print descriptor1_dict
         print descriptor2_dict
     else:
@@ -92,7 +92,7 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
 
     for idx, (img_name, I, timestamp) in enumerate(
             zip(sorted_tiff_file_names, I0, time_data)):
-        fs_uid = uuid4()
+        fs_uid = str(uuid4())
         dz = float(os.path.split(os.path.splitext(img_name)[0])[-1][1:3])
         data = {'img': fs_uid, 'I0': I, 'detz': dz}
         timestamps = {'img': timestamp, 'I0': timestamp}
@@ -151,7 +151,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
     poni_uuids = []
 
     for f in poni_files:
-        fs_uid = uuid4()
+        fs_uid = str(uuid4())
         if not dry_run:
             resource = insert_resource('pyFAI-geo', f)
             insert_datum(resource, fs_uid)
