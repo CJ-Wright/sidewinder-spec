@@ -19,12 +19,16 @@ The plan:
 """
 import numpy as np
 from uuid import uuid4
-
+from filestore.api import db_connect as fs_db_connect
+from metadatastore.api import db_connect as mds_db_connect
+fs_db_connect(**{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
+mds_db_connect(**{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
 if __name__ == '__main__':
     import os
     from sidewinder_spec.utils.parsers import parse_spec_file, \
         parse_tif_metadata, \
         parse_tif_metadata, parse_run_config
+
 
 
     root_folder = '/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/'

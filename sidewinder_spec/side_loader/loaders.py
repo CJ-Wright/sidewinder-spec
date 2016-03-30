@@ -6,7 +6,10 @@ from sidewinder_spec.utils.parsers import parse_spec_file, \
 from metadatastore.api import insert_event, insert_run_start, insert_run_stop, \
     insert_descriptor
 from filestore.api import insert_resource, insert_datum, register_handler
-
+from filestore.api import db_connect as fs_db_connect
+from metadatastore.api import db_connect as mds_db_connect
+fs_db_connect(**{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
+mds_db_connect(**{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
 
 def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
                    dry_run=True):
@@ -119,7 +122,7 @@ def dd_sample_changer_loader(run_folder, spec_data, section_start_times,
 
 
 def calibration_loader(run_folder, spec_data, section_start_times,
-                       run_kwargs, dry_run=True):
+                       run_kwargs, masks, dry_run=True):
     # Load all the metadata files in the folder
     tiff_metadata_files = [os.path.join(run_folder, f) for f in
                            os.listdir(run_folder)
@@ -157,6 +160,14 @@ def calibration_loader(run_folder, spec_data, section_start_times,
             insert_datum(resource, fs_uid)
         poni_uuids.append(fs_uid)
 
+    # add starting masks to run_kwargs
+
+        fs_uid = str(uuid4())
+        if not dry_run:
+            resource = insert_resource('pyFAI-geo', f)
+            insert_datum(resource, fs_uid)
+        poni_uuids.append(fs_uid)
+
     # 3. Create the run_start document.
     # Note we need to associate any background run headers with this run header
     run_start_dict = dict(time=min(timestamp_list), scan_id=1,
@@ -168,6 +179,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
                           background=False,
                           calibration=True,
                           poni=poni_uuids,  # Filestore save all the Poni files
+                          mask=masks #TODO: need to fix
                           **run_kwargs)
     if dry_run:
         run_start_uid = run_start_dict['uid']
