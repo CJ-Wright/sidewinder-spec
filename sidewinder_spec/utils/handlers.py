@@ -3,7 +3,7 @@ import tifffile
 from filestore import HandlerBase
 from filestore.api import register_handler
 import fabio
-
+import numpy as np
 
 class TiffHandler(HandlerBase):
     specs = {'TIFF'} | HandlerBase.specs
@@ -32,7 +32,7 @@ class Fit2DMaskHandler(HandlerBase):
         self._name = name
 
     def __call__(self):
-        return fabio.open(self._name).data
+        return np.flipud(fabio.open(self._name).data)
 
 
 handlers = [TiffHandler, PyFAIGeoHandler, Fit2DMaskHandler]
