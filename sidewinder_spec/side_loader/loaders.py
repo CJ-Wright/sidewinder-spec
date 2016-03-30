@@ -170,7 +170,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
                           poni=poni_uuids,  # Filestore save all the Poni files
                           **run_kwargs)
     if dry_run:
-        run_start_uid = uuid4()
+        run_start_uid = run_start_dict['uid']
         print run_start_dict
     else:
         run_start_uid = insert_run_start(**run_start_dict)
@@ -185,7 +185,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
     descriptor1_dict = dict(run_start=run_start_uid, data_keys=data_keys1,
                             time=0., uid=str(uuid4()))
     if dry_run:
-        descriptor1_uid = uuid4()
+        descriptor1_uid = descriptor1_dict['uid']
         print descriptor1_dict
     else:
         descriptor1_uid = insert_descriptor(**descriptor1_dict)
@@ -199,7 +199,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
 
     for idx, (img_name, I, timestamp) in enumerate(
             zip(sorted_tiff_file_names, I0, time_data)):
-        fs_uid = uuid4()
+        fs_uid = str(uuid4())
         dz = run_kwargs['run_config']['distance']
         data = {'img': fs_uid, 'I0': I, 'detz': dz}
         timestamps = {'img': timestamp, 'I0': timestamp}
