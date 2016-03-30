@@ -112,12 +112,116 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
                         uid=str(uuid4()))
     return run_start_uid
 
+
 def dd_sample_changer_loader(run_folder, spec_data, section_start_times,
                              run_kwargs):
     pass
 
 
+def calibration_loader(run_folder, spec_data, section_start_times,
+                       run_kwargs, dry_run=True):
+    # Load all the metadata files in the folder
+    tiff_metadata_files = [os.path.join(run_folder, f) for f in
+                           os.listdir(run_folder)
+                           if f.endswith('.tif.metadata')]
+    tiff_metadata_data = [parse_tif_metadata(f) for f in
+                          tiff_metadata_files]
+
+    # Sort the folder's data by time so we can have the start time
+    timestamp_list = [f['timestamp'] for f in tiff_metadata_data]
+
+    # read in all the remaining data namely image file names
+    tiff_file_names = [f[:-9] for f in tiff_metadata_files]
+
+    # sort remaining data by time
+    sorted_tiff_metadata_data = [x for (y, x) in sorted(
+        zip(timestamp_list, tiff_metadata_data))]
+    sorted_tiff_file_names = [x for (y, x) in sorted(
+        zip(timestamp_list, tiff_file_names))]
+
+    # make subset of spec data for this run
+    ti = sorted_tiff_metadata_data[0]['time_from_date']
+
+    # make a sub spec list which contains the spec section related to our data
+    spec_start_idx = np.argmin(np.abs(section_start_times - ti))
+    sub_spec = spec_data[spec_start_idx]
+
+    poni_files = [os.path.join(run_folder, f) for f in
+                  os.listdir(run_folder) if f.endswith('.poni')]
+    poni_uuids = []
+
+    for f in poni_files:
+        fs_uid = uuid4()
+        if not dry_run:
+            resource = insert_resource('pyFAI-geo', f)
+            insert_datum(resource, fs_uid)
+        poni_uuids.append(fs_uid)
+
+    # 3. Create the run_start document.
+    # Note we need to associate any background run headers with this run header
+    run_start_dict = dict(time=min(timestamp_list), scan_id=1,
+                          beamline_id='11-ID-B',
+                          group='Zhou',
+                          owner='CJ-Wright',
+                          project='PNO',
+                          uid=str(uuid4()),
+                          background=False,
+                          calibration=True,
+                          poni=poni_uuids,  # Filestore save all the Poni files
+                          **run_kwargs)
+    if dry_run:
+        run_start_uid = uuid4()
+        print run_start_dict
+    else:
+        run_start_uid = insert_run_start(**run_start_dict)
+        print run_start_uid
+
+    data_keys1 = {'I0': dict(source='IO', dtype='number'),
+                  'img': dict(source='det', dtype='array',
+                              shape=(2048, 2048),
+                              external='FILESTORE:'),
+                  'detz': dict(source='detz', dtype='number')}
+
+    descriptor1_dict = dict(run_start=run_start_uid, data_keys=data_keys1,
+                            time=0., uid=str(uuid4()))
+    if dry_run:
+        descriptor1_uid = uuid4()
+        print descriptor1_dict
+    else:
+        descriptor1_uid = insert_descriptor(**descriptor1_dict)
+        print descriptor1_uid
+
+    # insert all the temperature data
+    time_data = [scan['time_from_date'] for scan in sub_spec]
+
+    # insert the images
+    I0 = [scan['I00'] for scan in sub_spec]
+
+    for idx, (img_name, I, timestamp) in enumerate(
+            zip(sorted_tiff_file_names, I0, time_data)):
+        fs_uid = uuid4()
+        dz = run_kwargs['run_config']['distance']
+        data = {'img': fs_uid, 'I0': I, 'detz': dz}
+        timestamps = {'img': timestamp, 'I0': timestamp}
+        event_dict = dict(descriptor=descriptor1_uid, time=timestamp,
+                          data=data,
+                          uid=str(uuid4()), timestamps=timestamps, seq_num=idx)
+        print event_dict
+        if not dry_run:
+            resource = insert_resource('TIFF', img_name)
+            insert_datum(resource, fs_uid)
+            insert_event(**event_dict)
+
+    if dry_run:
+        print "Run Stop goes here"
+    else:
+        insert_run_stop(run_start=run_start_uid, time=np.max(timestamps),
+                        uid=str(uuid4()))
+    return run_start_uid
+
+
 run_loaders = {
     'temp_dd': temp_dd_loader,
-    'dd_sample_changer': dd_sample_changer_loader
+    'dd_sample_changer': dd_sample_changer_loader,
+    'calibration': calibration_loader
 }

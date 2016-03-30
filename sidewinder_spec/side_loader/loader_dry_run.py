@@ -42,15 +42,17 @@ if __name__ == '__main__':
 
     from sidewinder_spec.side_loader.loaders import *
     run_folders = [os.path.join(root_folder, f) for f in [
+        'Calibration/CeO2_25_3_12',
         # 'Quartz_Background/temp_exp'
         # 'S1/temp_exp',
         # 'S6',
-        'Calibration'
     ]]
 
+    print('\n\nStart loading the following folders')
+    print(run_folders)
     for run_folder in run_folders:
-        # 2. Load each run_start configuration file, which we write currently in each dir
 
+        # 2. Load each run_start configuration file, which we write currently in each dir
         config_file = os.path.join(run_folder, 'config.txt')
         run_config = parse_run_config(config_file)
         run_kwargs = run_config
@@ -58,8 +60,11 @@ if __name__ == '__main__':
             # figure out type of run to load
             loader = run_loaders[run_kwargs['run_config']['loader_name']]
             # Load it
-            run_start_uuid = loader(run_folder, spec_data, section_start_times, run_kwargs)
+            run_start_uuid = loader(run_folder, spec_data, section_start_times,
+                                    run_kwargs, dry_run=False)
+            print(run_folder, run_start_uuid)
         except KeyError:
             print('That kind of loader does not exist please try a'
                   ' different one')
+            raise
 
