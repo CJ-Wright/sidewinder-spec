@@ -36,9 +36,6 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
     spec_start_idx = np.argmin(np.abs(section_start_times - ti))
     sub_spec = spec_data[spec_start_idx]
 
-    resource = insert_resource('TIFF', run_kwargs[''])
-    insert_datum(resource, uuid4())
-
     # 3. Create the run_start document.
     # Note we need to associate any background run headers with this run header
     run_start_dict = dict(time=min(timestamp_list), scan_id=1,
