@@ -94,16 +94,20 @@ def parse_tif_metadata(file):
 
 def parse_run_config(file):
     config = ConfigParser.ConfigParser()
-    config.read(file)
-    output_dict = {}
-    for section in config.sections():
-        output_dict2 = {}
-        for option in config.options(section):
-            try:
-                output_dict2[option] = float(config.get(section=section,
-                                                  option=option))
-            except ValueError:
-                output_dict2[option] = config.get(section=section,
-                                                  option=option)
-        output_dict[section] = output_dict2
-    return output_dict
+    try:
+        config.read(file)
+        output_dict = {}
+        for section in config.sections():
+            output_dict2 = {}
+            for option in config.options(section):
+                try:
+                    output_dict2[option] = float(config.get(section=section,
+                                                      option=option))
+                except ValueError:
+                    output_dict2[option] = config.get(section=section,
+                                                      option=option)
+            output_dict[section] = output_dict2
+        return output_dict
+    except ConfigParser.ParsingError:
+        print('Invalid Config File')
+        return None
