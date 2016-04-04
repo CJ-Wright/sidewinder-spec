@@ -231,7 +231,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
         fs_uid = str(uuid4())
         dz = run_kwargs['general']['distance']
         data = {'img': fs_uid, 'I0': I, 'detz': dz}
-        timestamps = {'img': timestamp, 'I0': timestamp}
+        timestamps = {'img': timestamp, 'detz':timestamp,'I0': timestamp}
         event_dict = dict(descriptor=descriptor1_uid, time=timestamp,
                           data=data,
                           uid=str(uuid4()), timestamps=timestamps, seq_num=idx)
