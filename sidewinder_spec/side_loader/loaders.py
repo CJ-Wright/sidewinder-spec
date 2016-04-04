@@ -132,7 +132,7 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
         fs_uid = str(uuid4())
         dz = float(os.path.split(os.path.splitext(img_name)[0])[-1][1:3])
         data = {'img': fs_uid, 'I0': I, 'detz': dz}
-        timestamps = {'img': timestamp, 'I0': timestamp}
+        timestamps = {'img': timestamp, 'I0': timestamp, 'detz':timestamp}
         event_dict = dict(descriptor=descriptor1_uid, time=timestamp,
                           data=data,
                           uid=str(uuid4()), timestamps=timestamps, seq_num=idx)
