@@ -1,6 +1,7 @@
 import ConfigParser
 import os
 from datetime import datetime
+from sidewinder_spec import time_from_epoch
 
 
 def parse_spec_file(filename, exclude='test'):
@@ -66,7 +67,7 @@ def parse_spec_scan(line):
     scan_dict['shot_number'] = int(shots)
     c = c.strip()
     spec_time_pattern = '%a %b %d %H:%M:%S %Y'
-    scan_dict['time_from_date'] = datetime.strptime(c, spec_time_pattern)
+    scan_dict['time_from_date'] = time_from_epoch(datetime.strptime(c, spec_time_pattern))
 
     return scan_dict
 
@@ -85,10 +86,10 @@ def parse_tif_metadata(file):
                                                   option=option)
     if 'datestring' in output_dict.keys():
         pattern = '%Y.%m.%d : %H:%M:%S.%f'
-        output_dict['time_from_date'] = datetime.strptime(output_dict['datestring'],
-                                                        pattern)
+        output_dict['time_from_date'] = time_from_epoch(datetime.strptime(output_dict['datestring'],
+                                                        pattern))
     if 'timestamp' in output_dict.keys():
-        output_dict['time'] = datetime.fromtimestamp(output_dict['timestamp'])
+        output_dict['time'] = time_from_epoch(datetime.fromtimestamp(output_dict['timestamp']))
     return output_dict
 
 
