@@ -127,15 +127,16 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
     # insert the images
     I0 = [scan['I00'] for scan in sub_spec]
 
-    for idx, (img_name, I, timestamp) in enumerate(
-            zip(sorted_tiff_file_names, I0, time_data)):
+    for idx, (img_name, I, timestamp, metadata) in enumerate(
+            zip(sorted_tiff_file_names, I0, time_data, sorted_tiff_metadata_data)):
         fs_uid = str(uuid4())
         dz = float(os.path.split(os.path.splitext(img_name)[0])[-1][1:3])
         data = {'img': fs_uid, 'I0': I, 'detz': dz}
         timestamps = {'img': timestamp, 'I0': timestamp, 'detz':timestamp}
         event_dict = dict(descriptor=descriptor1_uid, time=timestamp,
                           data=data,
-                          uid=str(uuid4()), timestamps=timestamps, seq_num=idx)
+                          uid=str(uuid4()), timestamps=timestamps, seq_num=idx,
+                          tiff_metadata=metadata)
         # print event_dict
         if not dry_run:
             resource = insert_resource('TIFF', img_name)
