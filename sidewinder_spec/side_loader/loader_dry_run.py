@@ -53,7 +53,12 @@ if __name__ == '__main__':
     for run_folder, dirs, files in os.walk(root_folder):
         config_file = os.path.join(run_folder, 'config.txt')
         if os.path.exists(config_file):
-            general_loader(run_folder, spec_data, section_start_times, dry_run)
+            print(run_folder)
+            try:
+                run_config = parse_run_config(config_file)
+                general_loader(run_folder, spec_data, section_start_times, dry_run)
+            except:
+                pass
         else:
             # print('{} did not exist, therefore {} is not a run folder'.format(config_file, run_folder))
             pass
