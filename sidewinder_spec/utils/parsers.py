@@ -59,7 +59,7 @@ def parse_spec_scan(line):
         scan_dict['T'] = T
     else:
         a, i00 = line.split(',')
-    i00 = float(i00.strip('i00= '))
+    i00 = float(i00.split('= ')[-1])
     scan_dict['I00'] = i00
     b, c = a.split(' at ')
     _, _, stem, shots = b.split()
