@@ -154,19 +154,16 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
 
 
 def dd_sample_changer_loader(run_folder, spec_data, section_start_times,
-                             run_kwargs):
-    pass
+                             run_kwargs, dry_run=True):
+    sorted_tiff_metadata_data, sorted_tiff_file_names, timestamp_list = get_tiffs(
+        run_folder)
+
+
 
 
 def calibration_loader(run_folder, spec_data, section_start_times,
                        run_kwargs, dry_run=True):
     # Load all the metadata files in the folder
-    tiff_metadata_files = [os.path.join(run_folder, f) for f in
-                           os.listdir(run_folder)
-                           if f.endswith('.tif.metadata')]
-    tiff_metadata_data = [parse_tif_metadata(f) for f in
-                          tiff_metadata_files]
-
     sorted_tiff_metadata_data, sorted_tiff_file_names, timestamp_list = get_tiffs(
         run_folder)
 

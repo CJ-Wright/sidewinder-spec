@@ -5,6 +5,7 @@ from filestore.api import register_handler
 import fabio
 import numpy as np
 
+
 class TiffHandler(HandlerBase):
     specs = {'TIFF'} | HandlerBase.specs
 
