@@ -365,6 +365,13 @@ def dd_cell_sample_changer_loader(run_folder, spec_data, section_start_times,
     # insert the images
     I0 = [scan['I00'] for scan in sub_spec]
 
+    spec_mask = []
+    # for i in range(len(sub_spec)):
+    #     if sub_spec[i]['stem'] in
+
+    print(len(I0), len(sorted_tiff_file_names))
+    print(sub_spec)
+    print([a['stem'] for a in sub_spec])
     assert len(I0) == len(sorted_tiff_file_names)
     for idx, (img_name, I, timestamp, metadata) in enumerate(
             zip(sorted_tiff_file_names, I0, time_data,
