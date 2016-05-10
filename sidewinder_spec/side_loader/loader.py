@@ -14,7 +14,8 @@ from __future__ import print_function
 from sidewinder_spec.side_loader.loaders import *
 
 
-def load_beamtime(root_folder, spec_file_name, dry_run=True):
+def load_beamtime(root_folder, spec_file_name, dry_run=True, verbose=False):
+    print('dry run:', dry_run)
     spec_file_loc = os.path.join(root_folder, spec_file_name)
     spec_data = parse_spec_file(spec_file_loc)
     print(len(spec_data))
@@ -33,8 +34,9 @@ def load_beamtime(root_folder, spec_file_name, dry_run=True):
                 general_loader(run_folder, spec_data, section_start_times,
                                dry_run)
             except:
-                pass
-        else:
+                raise
+                # pass
+        elif verbose:
             print('{} did not exist, therefore {} is not a run folder'.format(
                 config_file, run_folder))
             pass

@@ -30,7 +30,7 @@ def parse_spec_file(filename, exclude='test'):
     for section in scan_data:
         section_parsed_data = []
         for line in section:
-            if '#U' in line and exclude not in line:
+            if line.startswith('#U') and exclude not in line:
                 section_parsed_data.append(parse_spec_scan(line))
         if len(section_parsed_data) != 0:
             total_parsed_data.append(section_parsed_data)
