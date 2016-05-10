@@ -62,7 +62,7 @@ install:
 
 
 script:
-  - python run_tests.py -v
+#  - python run_tests.py -v
 
 after_success:
-  - coveralls
+#  - coveralls
