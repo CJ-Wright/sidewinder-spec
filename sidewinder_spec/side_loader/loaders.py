@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from uuid import uuid4
 import os
@@ -9,6 +10,7 @@ from filestore.api import insert_resource, insert_datum, register_handler
 from filestore.api import db_connect as fs_db_connect
 from metadatastore.api import db_connect as mds_db_connect
 from databroker import db
+import datetime
 
 fs_db_connect(
     **{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
@@ -17,9 +19,10 @@ mds_db_connect(
 
 
 def get_tiffs(run_folder):
+    files = [f for f in os.listdir(run_folder) if 'test' not in f]
     # Load all the metadata files in the folder
     tiff_metadata_files = [os.path.join(run_folder, f) for f in
-                           os.listdir(run_folder)
+                           files
                            if f.endswith('.tif.metadata')]
     tiff_metadata_data = [parse_tif_metadata(f) for f in
                           tiff_metadata_files]
@@ -104,8 +107,8 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
     if dry_run:
         descriptor1_uid = descriptor1_dict['uid']
         descriptor2_uid = descriptor2_dict['uid']
-        print descriptor1_dict
-        print descriptor2_dict
+        print(descriptor1_dict)
+        print(descriptor2_dict)
     else:
         descriptor1_uid = insert_descriptor(**descriptor1_dict)
         descriptor2_uid = insert_descriptor(**descriptor2_dict)
@@ -147,7 +150,7 @@ def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
             insert_event(**event_dict)
 
     if dry_run:
-        print "Run Stop goes here"
+        print("Run Stop goes here")
     else:
         insert_run_stop(run_start=run_start_uid, time=np.max(timestamps),
                         uid=str(uuid4()))
@@ -322,8 +325,16 @@ def dd_cell_sample_changer_loader(run_folder, spec_data, section_start_times,
         poni_uuids.append(fs_uid)
 
     # make a sub spec list which contains the spec section related to our data
+
     spec_start_idx = np.argmin(np.abs(section_start_times - ti))
     sub_spec = spec_data[spec_start_idx]
+    print(sorted_tiff_metadata_data[0]['filebase'], sub_spec[0]['stem'])
+    print(
+        'td:', datetime.datetime.utcfromtimestamp(ti),
+        'ts:', datetime.datetime.utcfromtimestamp(sorted_tiff_metadata_data[0]['time']),
+        'spec:', datetime.datetime.utcfromtimestamp(section_start_times[spec_start_idx]),
+    )
+    AAA
 
     # 3. Create the run_start document.
     run_start_dict = dict(time=min(timestamp_list), scan_id=1,
@@ -443,10 +454,10 @@ def calibration_loader(run_folder, spec_data, section_start_times,
                           **run_kwargs)
     if dry_run:
         run_start_uid = run_start_dict['uid']
-        print run_start_dict
+        print(run_start_dict)
     else:
         run_start_uid = insert_run_start(**run_start_dict)
-        print run_start_uid
+        print(run_start_uid)
 
     data_keys1 = {'I0': dict(source='IO', dtype='number'),
                   'img': dict(source='det', dtype='array',
@@ -459,7 +470,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
                             time=0., uid=str(uuid4()))
     if dry_run:
         descriptor1_uid = descriptor1_dict['uid']
-        print descriptor1_dict
+        print(descriptor1_dict)
     else:
         descriptor1_uid = insert_descriptor(**descriptor1_dict)
         # print descriptor1_uid
@@ -487,7 +498,7 @@ def calibration_loader(run_folder, spec_data, section_start_times,
             insert_event(**event_dict)
 
     if dry_run:
-        print "Run Stop goes here"
+        print("Run Stop goes here")
     else:
         insert_run_stop(run_start=run_start_uid, time=np.max(timestamps),
                         uid=str(uuid4()))
