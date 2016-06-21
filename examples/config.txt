@@ -1,0 +1,9 @@
+[general]
+loader_name=temp_dd
+background_folder=/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/Quartz_Background/temp_exp
+[dist1]
+calibration_folder=/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/Calibration/CeO2_25_3_12
+[dist2]
+calibration_folder=/mnt/bulk-data/research_data/USC_beamtime/APS_March_2016/Calibration/CeO2_95_3_12
+[sample information]
+name=hello world

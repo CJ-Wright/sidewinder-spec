@@ -29,6 +29,16 @@ The NSLS-II stack (obviously)
 - databroker
 - pyFAI for image integration/calibration
 - IXStools (maybe if it provides valuble SPEC parsing)
-- PDFgetx3 for performing the I(Q)->G(r) conversion, I haven't decided if I 
-am going to try to make a nice function inside of the python pipeline or if I
+- PDFgetx3 for performing the I(Q)->G(r) conversion, We haven't decided if We 
+am going to try to make a nice function inside of the python pipeline or if We
  need to use subprocess
+ 
+## Installation
+We have written an installation script for installing this and the rest of the [analysis stack](https://gist.github.com/CJ-Wright/105a311f69ce2a32116f45163cfcd2af), note that this is a work in progress.
+If however, you wish to install this by itself, just clone it and run `python setup.py install`.
+
+## Usage
+1. Write the configuration files. Each directory which holds the data to be added to the database needs to have a `config.txt` file. This file will hold some basic information on the experiment ran. An example configuration file can be found under the examples folder. At a bare minimum 2 things are needed, the name of the experiment ran and the calibration file folder. Note that any additional information provided under other headers will be added to the run headers as additional information
+2. Run `pyFAI-calib` on the calibration data. All calibration images must be used to produce `.poni` files *before* any data is loaded into the DB. This may change with the advent of analysisstore but currently the loaders look for `.poni` files upon loading calibration files.
+3. Run `loader.load_beamtime('/path/to/file', 'path/to/spec_file', dry_run=False)`. This will load all the folder which have `config.txt` files into the DB, ready for use.
+4. Explore your data, we highly recommend using [xpd_workflow](https://github.com/CJ-Wright/xpd_workflow) and [scikit-beam](https://github.com/scikit-beam/scikit-beam)
