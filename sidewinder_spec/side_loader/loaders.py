@@ -11,15 +11,18 @@ from filestore.api import db_connect as fs_db_connect
 from metadatastore.api import db_connect as mds_db_connect
 from databroker import db
 import datetime
+from collections import ChainMap
+from pprint import pprint
 
+# TODO: remove these
 fs_db_connect(
     **{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
 mds_db_connect(
     **{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
 
 
-def get_tiffs(run_folder):
-    files = [f for f in os.listdir(run_folder) if 'test' not in f]
+def get_tiffs(run_folder, exempt=['test']):
+    files = [f for f in os.listdir(run_folder) if all(exempt not in f)]
     # Load all the metadata files in the folder
     tiff_metadata_files = [os.path.join(run_folder, f) for f in
                            files
@@ -30,7 +33,8 @@ def get_tiffs(run_folder):
     # Sort the folder's data by time so we can have the start time
     timestamp_list = [f['timestamp'] for f in tiff_metadata_data]
 
-    # read in all the image file names
+    # read in all the image file name, using the metadata file name
+    # TODO: This may need to change to be more robust
     tiff_file_names = [f[:-9] for f in tiff_metadata_files]
 
     # sort remaining data by time
@@ -39,6 +43,121 @@ def get_tiffs(run_folder):
     sorted_tiff_file_names = [x for (y, x) in sorted(
         zip(timestamp_list, tiff_file_names))]
     return sorted_tiff_metadata_data, sorted_tiff_file_names, timestamp_list
+
+
+def load_run(spec, run_folder, beamline_config, dry_run=True,
+             additional_data=None):
+    # Load the run_config from the run folder
+    run_config = load_run_config(run_folder)
+
+    md = ChainMap(beamline_config)
+    md.update(run_config)
+
+    # Associate the calibration data/background data
+    for folder_kwarg, is_kwarg, md_name in zip(
+            ['calibration_folders', 'background_folders' 'dark_folders'],
+            ['is_calibration', 'is_background', 'is_dark'],
+            ['calibration_uid', 'background_uid', 'dark_uid'],
+    ):
+        receive_list = []
+        # If we have a cal/bg
+        if folder_kwarg in run_config:
+            # For each cal/bg
+            for folder in run_config[folder_kwarg]:
+                # if the folder is the run folder make a uuid
+                if folder == run_folder:
+                    receive_list.append(str(uuid4()))
+                # We need to search for both the folder, and it's truth value
+                else:
+                    search_dict = {folder_kwarg: folder, is_kwarg: True}
+                    hdrs = db(**search_dict)
+                    # its in the DB use that hdr's cal/bg uuid
+                    if len(hdrs) == 0:
+                        # Load the data
+                        md_uuid = load_run(spec, folder, beamline_config)
+                        hdrs = db(**{md_name: md_uuid})
+                    receive_list.extend([hdr[md_name] for hdr in hdrs])
+        else:
+            # THIS IS VERY BAD, except for cals which don't have backgrounds
+            receive_list.append(None)
+        md[md_name] = receive_list
+
+    # stage the tiff files and metadata
+    (sorted_tiff_metadata_data, sorted_tiff_file_names,
+     timestamp_list) = get_tiffs(run_folder)
+
+    ti = sorted_tiff_metadata_data[0]['time_from_date']
+
+    # Get the section of spec we care about
+    section_start_times = np.asarray(
+        [run['run_start_header']['timestamp'] for run in spec])
+    spec_start_idx = np.argmin(np.abs(section_start_times - ti))
+    spec_run = spec[spec_start_idx]
+
+    # Put the header into MD
+    md.update(spec_run['run_start_header'])
+    md['scan_id'] = spec_start_idx
+
+    if dry_run:
+        print('Run Header')
+        pprint(md)
+        run_start_uid = str(uuid4())
+    else:
+        run_start_uid = insert_run_start(**md)
+
+    # load the images
+    img_data_keys = {'pe1_img': dict(source='pe1_img', dtype='array',
+                                     shape=(2048, 2048),
+                                     external='FILESTORE:'),
+                     'metadata': dict(source='metadata', dtype='dict')}
+    img_descriptor_dict = dict(run_start=run_start_uid,
+                               data_keys=img_data_keys,
+                               time=0., uid=str(uuid4()))
+
+    if dry_run:
+        img_descriptor_uid = img_descriptor_dict['uid']
+        print(img_descriptor_uid)
+    else:
+        img_descriptor_uid = insert_descriptor(**img_descriptor_dict)
+
+    time_data = [s['timestamp'] for s in spec_run]
+    for idx, (img_name, timestamp, metadata) in enumerate(
+            zip(sorted_tiff_file_names, time_data,
+                sorted_tiff_metadata_data)):
+        fs_uid = str(uuid4())
+        data = {'pe1_img': fs_uid, 'metadata': metadata}
+        timestamps = {'img': timestamp, 'metadata': timestamp}
+        event_dict = dict(descriptor=img_descriptor_uid, time=timestamp,
+                          data=data,
+                          uid=str(uuid4()), timestamps=timestamps, seq_num=idx,
+                          )
+        # print event_dict
+        if not dry_run:
+            resource = insert_resource('TIFF', img_name)
+            insert_datum(resource, fs_uid)
+            insert_event(**event_dict)
+
+    # TODO: Need to add the additional data here
+    for key in spec_run['scans'][0].keys():
+        # TODO: it would be nice to have the data keys in the spec run
+        data_keys = {key: dict(source=key, dtpe='number')}
+        descriptor_dict = dict(run_start=run_start_uid, data_keys=data_keys,
+                               time=0., uid=str(uuid4()))
+        for idx, scan in enumerate(spec_run['scans']):
+            event_dict = dict(descriptor=descriptor_dict,
+                              time=scan['timestamp'],
+                              data={key: scan[key]},
+                              uid=str(uuid4()),
+                              timestamps={key: scan['timestamp']},
+                              seq_num=idx)
+            if not dry_run:
+                insert_event(**event_dict)
+    if dry_run:
+        print("Run Stop goes here")
+    else:
+        insert_run_stop(run_start=run_start_uid, time=np.max(timestamps),
+                        uid=str(uuid4()))
+    return run_start_uid
 
 
 def temp_dd_loader(run_folder, spec_data, section_start_times, run_kwargs,
@@ -331,8 +450,10 @@ def dd_cell_sample_changer_loader(run_folder, spec_data, section_start_times,
     print(sorted_tiff_metadata_data[0]['filebase'], sub_spec[0]['stem'])
     print(
         'td:', datetime.datetime.utcfromtimestamp(ti),
-        'ts:', datetime.datetime.utcfromtimestamp(sorted_tiff_metadata_data[0]['time']),
-        'spec:', datetime.datetime.utcfromtimestamp(section_start_times[spec_start_idx]),
+        'ts:', datetime.datetime.utcfromtimestamp(
+            sorted_tiff_metadata_data[0]['time']),
+        'spec:', datetime.datetime.utcfromtimestamp(
+            section_start_times[spec_start_idx]),
     )
     AAA
 
