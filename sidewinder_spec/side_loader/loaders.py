@@ -14,12 +14,6 @@ import datetime
 from collections import ChainMap
 from pprint import pprint
 
-# TODO: remove these
-fs_db_connect(
-    **{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
-mds_db_connect(
-    **{'database': 'data-processing-dev', 'host': 'localhost', 'port': 27017})
-
 
 def get_tiffs(run_folder, exempt=['test']):
     files = [f for f in os.listdir(run_folder) if all(exempt not in f)]
@@ -138,9 +132,10 @@ def load_run(spec, run_folder, beamline_config, dry_run=True,
             insert_event(**event_dict)
 
     # TODO: Need to add the additional data here
-    for key in spec_run['scans'][0].keys():
+    for key in spec_run['scans'][0]['md'].keys():
         # TODO: it would be nice to have the data keys in the spec run
-        data_keys = {key: dict(source=key, dtpe='number')}
+        # TODO: need to change dtype based on python type; need map
+        data_keys = {key: dict(source=key, dtype='number')}
         descriptor_dict = dict(run_start=run_start_uid, data_keys=data_keys,
                                time=0., uid=str(uuid4()))
         for idx, scan in enumerate(spec_run['scans']):

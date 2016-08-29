@@ -1,4 +1,4 @@
-import ConfigParser
+# import ConfigParser
 import os
 from datetime import datetime
 from sidewinder_spec import time_from_epoch
@@ -67,7 +67,8 @@ def parse_spec_scan(line):
     scan_dict['shot_number'] = int(shots)
     c = c.strip()
     spec_time_pattern = '%a %b %d %H:%M:%S %Y'
-    scan_dict['time_from_date'] = time_from_epoch(datetime.strptime(c, spec_time_pattern))
+    scan_dict['time_from_date'] = time_from_epoch(
+        datetime.strptime(c, spec_time_pattern))
 
     return scan_dict
 
@@ -80,16 +81,18 @@ def parse_tif_metadata(file):
         for option in config.options(section):
             try:
                 output_dict[option] = float(config.get(section=section,
-                                                  option=option))
+                                                       option=option))
             except ValueError:
                 output_dict[option] = config.get(section=section,
-                                                  option=option)
+                                                 option=option)
     if 'datestring' in output_dict.keys():
         pattern = '%Y.%m.%d : %H:%M:%S.%f'
-        output_dict['time_from_date'] = time_from_epoch(datetime.strptime(output_dict['datestring'],
-                                                        pattern))
+        output_dict['time_from_date'] = time_from_epoch(
+            datetime.strptime(output_dict['datestring'],
+                              pattern))
     if 'timestamp' in output_dict.keys():
-        output_dict['time'] = time_from_epoch(datetime.fromtimestamp(output_dict['timestamp']))
+        output_dict['time'] = time_from_epoch(
+            datetime.fromtimestamp(output_dict['timestamp']))
     return output_dict
 
 
@@ -103,7 +106,7 @@ def parse_run_config(file):
             for option in config.options(section):
                 try:
                     output_dict2[option] = float(config.get(section=section,
-                                                      option=option))
+                                                            option=option))
                 except ValueError:
                     output_dict2[option] = config.get(section=section,
                                                       option=option)
@@ -112,3 +115,36 @@ def parse_run_config(file):
     except ConfigParser.ParsingError:
         print('Invalid Config File')
         return None
+
+
+def parse_new_spec_file(filename, exclude=['test']):
+    fn = os.path.abspath(filename)
+    with open(fn, 'r') as f:
+        scan_data = f.read().split('\n\n')
+    runs = [section.split('\n') for section in scan_data]
+    return runs
+
+
+def parse_new_spec_run(runs):
+    proc_runs = []
+    for run in runs:
+        d_run = {'events': []}
+        for header_or_event in run:
+            name, md_dict = parse_header_or_event(header_or_event)
+            if name in ['start', 'stop']:
+                d_run[name] = md_dict
+            else:
+                d_run['events'].append(md_dict)
+
+        proc_runs.append(d_run)
+    return proc_runs
+
+
+def parse_header_or_event(header_or_event):
+    name, data = header_or_event.split(': ', 1)
+    md_dict = {}
+    for md in data.split(', '):
+        print(md)
+        k, v = md.split(':')
+        md_dict[k] = v
+    return name, md_dict
