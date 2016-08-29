@@ -41,8 +41,28 @@ def get_tiffs(run_folder, exempt=['test']):
 
 def load_run(spec, run_folder, beamline_config, dry_run=True,
              additional_data=None):
+    """
+    Load a single run into the databroker
+
+    Parameters
+    ----------
+    spec: list of dict
+        The dict which contains the spec log fil data
+    run_folder: str
+        The folder which contains the run configuration and image files
+    beamline_config: dict
+        The beamline configuration for this run
+    dry_run: bool
+        If True don't load the data but print what would have been loaded
+    additional_data: list of dicts
+        Any additional data to be added to the run not in the spec log
+
+    Returns
+    -------
+
+    """
     # Load the run_config from the run folder
-    run_config = load_run_config(run_folder)
+    run_config = parse_run_config(run_folder)
 
     md = ChainMap(beamline_config)
     md.update(run_config)
@@ -84,13 +104,13 @@ def load_run(spec, run_folder, beamline_config, dry_run=True,
 
     # Get the section of spec we care about
     section_start_times = np.asarray(
-        [run['run_start_header']['timestamp'] for run in spec])
+        [run['start']['time'] for run in spec])
     spec_start_idx = np.argmin(np.abs(section_start_times - ti))
     spec_run = spec[spec_start_idx]
 
     # Put the header into MD
-    md.update(spec_run['run_start_header'])
-    md['scan_id'] = spec_start_idx
+    md.update(spec_run['start'])
+    md['run_id'] = spec_start_idx
 
     if dry_run:
         print('Run Header')
@@ -131,26 +151,28 @@ def load_run(spec, run_folder, beamline_config, dry_run=True,
             insert_datum(resource, fs_uid)
             insert_event(**event_dict)
 
-    # TODO: Need to add the additional data here
-    for key in spec_run['scans'][0]['md'].keys():
-        # TODO: it would be nice to have the data keys in the spec run
-        # TODO: need to change dtype based on python type; need map
-        data_keys = {key: dict(source=key, dtype='number')}
-        descriptor_dict = dict(run_start=run_start_uid, data_keys=data_keys,
-                               time=0., uid=str(uuid4()))
-        for idx, scan in enumerate(spec_run['scans']):
-            event_dict = dict(descriptor=descriptor_dict,
-                              time=scan['timestamp'],
-                              data={key: scan[key]},
-                              uid=str(uuid4()),
-                              timestamps={key: scan['timestamp']},
-                              seq_num=idx)
-            if not dry_run:
-                insert_event(**event_dict)
+    for metadata_chunk in [spec_run['events'], additional_data]:
+        for key in metadata_chunk[0].keys():
+            if key not in ['timestamp', 'filename', 'file_name']:
+                # TODO: need to change dtype based on python type; need map
+                data_keys = {key: dict(source=key, dtype='number')}
+                descriptor_dict = dict(run_start=run_start_uid,
+                                       data_keys=data_keys,
+                                       time=0., uid=str(uuid4()))
+                for idx, scan in enumerate(metadata_chunk):
+                    event_dict = dict(descriptor=descriptor_dict,
+                                      time=scan['timestamp'],
+                                      data={key: scan[key]},
+                                      uid=str(uuid4()),
+                                      timestamps={key: scan['timestamp']},
+                                      seq_num=idx)
+                    if not dry_run:
+                        insert_event(**event_dict)
+
     if dry_run:
         print("Run Stop goes here")
     else:
-        insert_run_stop(run_start=run_start_uid, time=np.max(timestamps),
+        insert_run_stop(run_start=run_start_uid, time=np.max(time_data),
                         uid=str(uuid4()))
     return run_start_uid
 
