@@ -1,5 +1,5 @@
 [run]
-source=sidewinder-spec
+source=sidewinder_spec
 branch=True
 [report]
 omit =
