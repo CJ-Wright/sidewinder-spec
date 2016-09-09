@@ -63,7 +63,7 @@ install:
 
 
 script:
-  - coverage run_tests.py -v
+  - coverage run run_tests.py -v
   - coverage report -m
 
 after_success:
