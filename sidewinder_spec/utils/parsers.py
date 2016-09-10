@@ -112,10 +112,10 @@ def parse_tif_metadata(filename):
     return output_dict
 
 
-def parse_run_config(file):
+def parse_run_config(filename):
     config = ConfigParser.ConfigParser()
     try:
-        config.read(file)
+        config.read(filename)
         output_dict = {}
         for section in config.sections():
             output_dict2 = {}
