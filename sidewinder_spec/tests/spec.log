@@ -1,6 +1,7 @@
 start: time: 5, run_function: temperature_dd
 event: timestamp:6, file_name:blob, T:55, detz:25
 event: timestamp:7, file_name:blob, T:60, detz:26
+event: timestamp:7, file_name:blob, T:60, detz:26
 stop: time:12, run_function:temperature_dd
 
 start: time: 15, run_function: temperature_dd

@@ -1,4 +1,7 @@
-# import ConfigParser
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 import os
 from datetime import datetime
 from sidewinder_spec import time_from_epoch
@@ -73,9 +76,22 @@ def parse_spec_scan(line):
     return scan_dict
 
 
-def parse_tif_metadata(file):
+def parse_tif_metadata(filename):
+    """
+    Parse the data from the QXRD tif.metadata file
+
+    Parameters
+    ----------
+    filename: str
+        The file location
+
+    Returns
+    -------
+    dict:
+        The metadata, parsed
+    """
     config = ConfigParser.ConfigParser()
-    config.read(file)
+    config.read(filename)
     output_dict = {}
     for section in config.sections():
         for option in config.options(section):
@@ -135,7 +151,6 @@ def parse_new_spec_run(runs):
                 d_run[name] = md_dict
             else:
                 d_run['events'].append(md_dict)
-
         proc_runs.append(d_run)
     return proc_runs
 
@@ -144,7 +159,6 @@ def parse_header_or_event(header_or_event):
     name, data = header_or_event.split(': ', 1)
     md_dict = {}
     for md in data.split(', '):
-        print(md)
         k, v = md.split(':')
         md_dict[k] = v
     return name, md_dict
