@@ -64,6 +64,8 @@ def parse_hdf5(fn):
                         if s == (1, ):
                             v = float(v)
                             s = []
+                        else:
+                            v = v.astype('float32')
                     else:
                         s = []
                 data_dict[key_data_map[data_source]] = v
