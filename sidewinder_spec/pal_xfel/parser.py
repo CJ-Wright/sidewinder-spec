@@ -58,6 +58,8 @@ def parse_hdf5(fn):
 
         # loop through the delay points
         for i, delay_point in enumerate(f[scans].keys()):
+            delay = f[format_keys(scans, delay_point)].attrs[
+                'delay_time_readback']
             events = []
 
             timestamps = list(
@@ -69,8 +71,10 @@ def parse_hdf5(fn):
                 event = {'uid': new_uid(),
                          'descriptor': duid,
                          'filled': {'image': True},
-                         'data': {'shot_number': shot_number},
-                         'timestamps': {'shot_number': ts},
+                         'data': {'shot_number': shot_number,
+                                  'delay_timestamp': delay},
+                         'timestamps': {'shot_number': ts,
+                                        'delay_timestamp': ts},
                          'seq_num': i,
                          'time': time.time(),
                          }
