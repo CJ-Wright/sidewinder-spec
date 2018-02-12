@@ -14,13 +14,10 @@ gsas_parser_list = [
     ('IPTS', 7, 'IPTS-(.+?)', ('IPTS-',), int),
     ('primary flight path', 11, 'Primary flight path (.+?)m',
      ('Primary flight path ', 'm'), float),
-    ('total flight path', 12, 'Total flight path   (.+?)m',
-     ('Total flight path   ', 'm'), float),
-    ('tth', 12, 'tth   (.+?)deg', ('tth   ', 'deg'), float),
 ]
 
 
-def gsas_subparser(string):
+def gsas_header_subparser(string):
     output = {}
     gsas_data = string.split('\n')[:14]
     gsas_data = [s.strip('# ').strip() for s in gsas_data]
@@ -43,6 +40,31 @@ def gsas_subparser(string):
     return output
 
 
+bank_parser_list = [('total flight path', 12, 'Total flight path   (.+?)m',
+                     ('Total flight path   ', 'm'), float),
+                    ('tth', 12, 'tth   (.+?)deg', ('tth   ', 'deg'), float), ]
+
+
+def parse_bank_data(string):
+    output = {}
+    string = string.strip('# ')
+    for name, line, re_string, strips, dtype in bank_parser_list:
+        re_res = re.search(re_string, string)
+        if re_res:
+            data = re_res.group()
+            for strip in strips:
+                data = data.strip(strip)
+            data = data.strip()
+            if data:
+                data = dtype(data)
+                output[name] = data
+    output.update({'total flight path unit': 'm',
+                   'tth unit': 'deg'
+                   })
+
+    return output
+
+
 def parse(file_dir):
     gsas_root = os.path.join(file_dir, 'GSAS')
     gsas_files = [f for f in os.listdir(gsas_root) if f.endswith('.gsa')]
@@ -58,7 +80,14 @@ def parse(file_dir):
 
         a = gsas_file.split('_')
         with open(os.path.join(gsas_root, gsas_file), 'r') as f:
-            start_doc.update(gsas_subparser(f.read()))
+            start_doc.update(gsas_header_subparser(f.read()))
+        bank_info = {}
+        with open(os.path.join(gsas_root, gsas_file), 'r') as f:
+            data = f.readlines()
+            for bank in range(1, 7):
+                bank_info[bank - 1] = parse_bank_data(
+                    data[data.index('# Data for spectrum '
+                                    ':{}'.format(bank)) - 1])
         start_doc['sample_name'] = a[1]
         start_doc['composition_string'] = a[1]
         if 'gas' in a:
@@ -87,6 +116,7 @@ def parse(file_dir):
                                              'unit': 'arb'}
                                    },
                               'time': time.time()}
+            descriptor_doc.update(bank_info[bank])
             yield 'descriptor', descriptor_doc
             full_prof_file_name = gsas_file.replace('.gsa',
                                                     '-{}.dat'.format(bank))
@@ -97,7 +127,9 @@ def parse(file_dir):
                      'filled': {'tof': True,
                                 'intensity': True,
                                 'error': True},
-                     'data': {'tof': tof, 'intensity': i, 'error': err},
+                     'data': {'tof': tof,
+                              'intensity': i,
+                              'error': err},
                      'timestamps': {'tof': time.time(),
                                     'intensity': time.time(),
                                     'error': time.time()},
