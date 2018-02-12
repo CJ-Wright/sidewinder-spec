@@ -142,6 +142,9 @@ def parse(file_dir):
 
 
 if __name__ == '__main__':
+    from nomad.pipeline import source, filename_name_nodes
+    root_path = '.'
+    for n in filename_name_nodes.values():
+        n.kwargs.update(root=root_path)
     for n, d in parse('/home/christopher/dev/17ly_NOMADpipeline/data'):
-        print(n)
-        pprint(d)
+        source.emit((n, d))
