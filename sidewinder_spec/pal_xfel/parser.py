@@ -23,14 +23,12 @@ calib_config_dict = dict(ai.getPyFAI())
 
 def parse_hdf5(fn):
     f = h5py.File(fn, 'r')
-    shot_number = 0
     suid = new_uid()
     # loop through the scans
     for scans in f.keys():
         # Create start doc
         start_doc = {
             'uid': suid,
-            'shot_number': shot_number,
             'i0thresh': 2.e9,
             'i0amp': 1.e10,
             'calibration_md': calib_config_dict,
