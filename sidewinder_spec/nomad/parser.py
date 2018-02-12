@@ -7,8 +7,6 @@ import time
 
 files_types = ['.gsa', '.dat']
 
-'NOM_Li4SiO4_gas_CO2_dry_at_25C_cycle2'
-
 gsas_parser_list = [
     ('bt_wavelength', 0, 'Wavelength: (.+?) Angstrom',
      ('Wavelength:', 'Angstrom'), float),
