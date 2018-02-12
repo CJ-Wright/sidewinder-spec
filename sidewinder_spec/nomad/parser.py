@@ -51,7 +51,8 @@ def parse(file_dir):
         start_doc = {'facility': 'NOMAD',
                      'uid': suid,
                      'sideloaded': True,
-                     'time': time.time()}
+                     'time': time.time(),
+                     'filename': os.path.splitext(gsas_file)[0]}
 
         full_prof_root = os.path.join(file_dir, 'fullprof')
 
@@ -59,13 +60,14 @@ def parse(file_dir):
         with open(os.path.join(gsas_root, gsas_file), 'r') as f:
             start_doc.update(gsas_subparser(f.read()))
         start_doc['sample_name'] = a[1]
+        start_doc['composition_string'] = a[1]
         if 'gas' in a:
             start_doc.update({'gas': a[3]})
         if 'dry' in a:
             start_doc.update({'dry': True})
         if 'C' in a[6]:
             start_doc.update({'temperature': a[6].replace('C', '')})
-        start_doc.update({'cycle': a[7].split('cycle')[1].split('.')[0]})
+        start_doc.update({'cycle': a[-1].split('cycle')[1].split('.')[0]})
         yield 'start', start_doc
 
         for bank in range(6):
