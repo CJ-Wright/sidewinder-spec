@@ -83,7 +83,7 @@ def parse(file_dir):
             start_doc.update(gsas_header_subparser(f.read()))
         bank_info = {}
         with open(os.path.join(gsas_root, gsas_file), 'r') as f:
-            data = f.readlines()
+            data = f.read().split('\n')
             for bank in range(1, 7):
                 bank_info[bank - 1] = parse_bank_data(
                     data[data.index('# Data for spectrum '
