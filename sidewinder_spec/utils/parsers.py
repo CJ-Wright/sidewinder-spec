@@ -1,4 +1,4 @@
-import ConfigParser
+import configparser
 import os
 from datetime import datetime
 from sidewinder_spec import time_from_epoch
@@ -73,7 +73,7 @@ def parse_spec_scan(line):
 
 
 def parse_tif_metadata(file):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read(file)
     output_dict = {}
     for section in config.sections():
@@ -94,7 +94,7 @@ def parse_tif_metadata(file):
 
 
 def parse_run_config(file):
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     try:
         config.read(file)
         output_dict = {}
@@ -109,6 +109,6 @@ def parse_run_config(file):
                                                       option=option)
             output_dict[section] = output_dict2
         return output_dict
-    except ConfigParser.ParsingError:
+    except configparser.ParsingError:
         print('Invalid Config File')
         return None

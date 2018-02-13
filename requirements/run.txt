@@ -1,0 +1,7 @@
+h5py
+bluesky
+numpy
+shed
+pyfai
+databroker
+fabio
