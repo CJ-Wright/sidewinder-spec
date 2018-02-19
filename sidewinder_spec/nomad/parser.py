@@ -40,9 +40,9 @@ def gsas_header_subparser(string):
     return output
 
 
-bank_parser_list = [('total flight path', 12, 'Total flight path   (.+?)m',
+bank_parser_list = [('total flight path', 12, 'Total flight path[ \t]+(.+?)m',
                      ('Total flight path   ', 'm'), float),
-                    ('tth', 12, 'tth   (.+?)deg', ('tth   ', 'deg'), float), ]
+                    ('tth', 12, 'tth[ \t]+(.+?)deg', ('tth   ', 'deg'), float), ]
 
 
 def parse_bank_data(string):
