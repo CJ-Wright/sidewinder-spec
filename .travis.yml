@@ -11,16 +11,18 @@ addons:
     - mongodb-org-server
 matrix:
   include:
-    - python: 2.7
-    - python: 3.4
-    - python: 3.5
+    - python: 3.6
 
 before_install:
-  # use latest because why not?
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"
+  - "export DISPLAY=:99.0"
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
-  - ./miniconda.sh -b -p /home/travis/mc
-  - export PATH=/home/travis/mc/bin:$PATH
+  - ./miniconda.sh -b -p ~/mc
+  - export PATH=~/mc/bin:$PATH
+  - conda config --set always_yes yes --set changeps1 no --set quiet true
+  - conda update conda --yes
+  - conda config --add channels conda-forge
   # Set up config for MDS and FS.
   - export MDS_HOST=localhost
   - export MDS_DATABASE=test
@@ -34,35 +36,14 @@ before_install:
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
-  - conda config --set always_yes true
-  - conda install "conda<4"
-  # pin to numpy < 1.10 because pandas 0.16 and numpy 1.10 do not play nice
-  - conda create -n testenv pip nose python=$TRAVIS_PYTHON_VERSION six "numpy<1.10" pandas h5py coverage jsonschema jinja2 cytoolz
+  - conda create --yes -n testenv python=$TRAVIS_PYTHON_VERSION
   - source activate testenv
-  # deps needed for metadatastore/filestore
-  - conda install -n testenv pyyaml
-  # Dependencies not in official conda have been uploaded to binstar orgs.
-  - conda config --add channels lightsource2
-  - conda config --add channels soft-matter
-  - conda install mongoengine tzlocal prettytable boltons pymongo=2.9 pims tifffile doct
-  - conda install nomkl
-  # install all the pip deps
-  - pip install coveralls
-  # these next three will be replaced by the following two lines soon once
-  # conda-forge is activated on metadatastore, filestore and channelarchiver
-  # - conda config --add channels lightsource2-dev
-  # - conda install -n testenv metadatastore filestore channelarchiver
-  - if [ $TRAVIS_PYTHON_VERSION = "2.7" ]; then
-      pip install singledispatch;
-    fi;
-  - pip install https://github.com/NSLS-II/metadatastore/zipball/master#egg=metadatastore
-  - pip install https://github.com/NSLS-II/filestore/zipball/master#egg=filestore
-  - pip install https://github.com/NSLS-II/databroker/zipball/master#egg=databroker
-  - python setup.py install
+  - conda install --yes --file requirements/build.txt
+  - conda install pip
+  - pip install -r requirements/pip.txt
+  - pip install .
 
 
 script:
-#  - python run_tests.py -v
-
-after_success:
-#  - coveralls
+# No test as of yet
+  - true
