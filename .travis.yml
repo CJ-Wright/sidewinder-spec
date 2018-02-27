@@ -42,3 +42,8 @@ install:
   - conda install pip
   - pip install -r requirements/pip.txt
   - pip install .
+
+
+script:
+# No test as of yet
+  - true
