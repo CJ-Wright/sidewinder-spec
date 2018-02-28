@@ -1,0 +1,3 @@
+#!/user/bin/env python
+from sidewinder_spec.main import main
+main()

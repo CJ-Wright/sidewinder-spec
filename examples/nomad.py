@@ -25,7 +25,7 @@ for n, d in parse('/path/to/folder'):
             d['data_keys'][k]['external'] = True
     if n == 'event':
         for k in ['tof', 'intensity', 'error']:
-            d['data'][k] = writer.write(d['data']['image'])
+            d['data'][k] = writer.write(d['data'][k])
             d['filled'][k] = False
     print(n)
     pprint(d)

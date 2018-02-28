@@ -82,10 +82,8 @@ benchmarks/*
 extra/*
 
 cover
-scripts/*
 benchmarks
 extra
-scripts
 
 
 # Rever
