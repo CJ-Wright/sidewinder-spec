@@ -7,6 +7,7 @@ setup(
     url='',
     license='',
     author='Christopher J. Wright',
-    author_email='wright1@email.sc.edu',
-    description=''
+    author_email='cjwright4242@gmail.com',
+    description='',
+    scripts=['scripts/sidewind']
 )
