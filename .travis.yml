@@ -46,4 +46,6 @@ install:
 
 script:
 # No test as of yet
-  - true
+  - sidewind -h
+  - sidewind init test .
+  - sidewind nomad -h
