@@ -40,7 +40,7 @@ def main(args=None):
         db = Broker.named(ns['db_name'])
         db_path = db.get_config()['metadatastore']['config']['directory']
         writer = NpyWriter(db.fs, db_path)
-        for n, di in FACILITY_PARSER_MAP[ns.cmd]['cmd'](ns['input_data']):
+        for n, d in FACILITY_PARSER_MAP[ns.cmd]['cmd'](ns['input_data']):
             if n == 'descriptor':
                 for k in ['tof', 'intensity', 'error']:
                     d['data_keys'][k]['external'] = True
