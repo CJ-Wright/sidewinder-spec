@@ -66,5 +66,6 @@ def main(args=None):
                              'config': {'dbpath': os.path.join(
                                  path, 'database.sql')}}}
         os.makedirs(path, exist_ok=True)
+        os.makedirs(db_config_path, exist_ok=True)
         with open(db_config_path, 'w', encoding='utf8') as f:
             yaml.dump(config, f)
