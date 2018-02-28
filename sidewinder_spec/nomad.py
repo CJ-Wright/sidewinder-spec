@@ -5,8 +5,8 @@ import time
 import numpy as np
 from bluesky.utils import new_uid
 
-files_types = ['.gsa', '.dat']
-gsas_parser_list = [
+FILE_TYPES = ['.gsa', '.dat']
+GSAS_PARSER_LIST = [
     ('bt_wavelength', 0, 'Wavelength: (.+?) Angstrom',
      ('Wavelength:', 'Angstrom'), float),
     ('run', 0, 'Sample Run: (.+?) ', ('Sample Run: ',), int),
@@ -17,10 +17,11 @@ gsas_parser_list = [
 
 
 def gsas_header_subparser(string):
+    """Parse GSAS header into top level metadata"""
     output = {}
     gsas_data = string.split('\n')[:14]
     gsas_data = [s.strip('# ').strip() for s in gsas_data]
-    for name, line, re_string, strips, dtype in gsas_parser_list:
+    for name, line, re_string, strips, dtype in GSAS_PARSER_LIST:
         re_res = re.search(re_string, gsas_data[line])
         if re_res:
             data = re_res.group()
@@ -39,15 +40,16 @@ def gsas_header_subparser(string):
     return output
 
 
-bank_parser_list = [('total flight path', 12, 'Total flight path[ \t]+(.+?)m',
+BANK_PARSER_LIST = [('total flight path', 12, 'Total flight path[ \t]+(.+?)m',
                      ('Total flight path   ', 'm'), float),
                     ('tth', 12, 'tth[ \t]+(.+?)deg', ('tth   ', 'deg'), float), ]
 
 
 def parse_bank_data(string):
+    """Parse the bank information from the GSAS file"""
     output = {}
     string = string.strip('# ')
-    for name, line, re_string, strips, dtype in bank_parser_list:
+    for name, line, re_string, strips, dtype in BANK_PARSER_LIST:
         re_res = re.search(re_string, string)
         if re_res:
             data = re_res.group()
@@ -65,6 +67,21 @@ def parse_bank_data(string):
 
 
 def parse(file_dir):
+    """Parse a folder full of GSAS and FullProf filesfrom the NOMAD beamline
+    into an event stream
+
+    Parameters
+    ----------
+    file_dir: str
+        The path to the folder containing the data
+
+    Yields
+    -------
+    name: str
+        The name of the document
+    doc: dict
+        The event model document
+    """
     gsas_root = os.path.join(file_dir, 'GSAS')
     gsas_files = [f for f in os.listdir(gsas_root) if f.endswith('.gsa')]
     for gsas_file in gsas_files:
@@ -138,6 +155,3 @@ def parse(file_dir):
             yield 'event', event
         yield 'stop', {'uid': new_uid(), 'run_start': suid,
                        'time': time.time()}
-
-
-root_path = '.'

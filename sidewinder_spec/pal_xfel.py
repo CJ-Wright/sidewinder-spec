@@ -21,8 +21,24 @@ calib_config_dict = dict(ai.getPyFAI())
 
 
 def parse_hdf5(fn):
+    """Parse hdf5 file from the PAL-XFEL beamline into an event stream
+
+    Parameters
+    ----------
+    fn: str
+        The path to the hdf5 file
+
+    Yields
+    -------
+    name: str
+        The name of the document
+    doc: dict
+        The event model document
+    """
+
     f = h5py.File(fn, 'r')
     suid = new_uid()
+
     # loop through the scans
     for scans in f.keys():
         # Create start doc
@@ -39,6 +55,7 @@ def parse_hdf5(fn):
             'bt_wavelength': (12.398 / 9.70803 * 1.0e-10)
         }
         yield 'start', start_doc
+
         # Create most of the descriptor
         duid = new_uid()
         descriptor_doc = {'uid': duid,
@@ -119,5 +136,6 @@ def parse_hdf5(fn):
                 assert i == e['data']['shot_number']
                 yield 'event', e
 
-        yield 'stop', {'uid': new_uid(), 'run_start': suid,
+        yield 'stop', {'uid': new_uid(),
+                       'run_start': suid,
                        'time': time.time()}
