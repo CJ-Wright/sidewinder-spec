@@ -1,12 +1,11 @@
-import re
-from pprint import pprint
-import numpy as np
 import os
-from bluesky.utils import new_uid
+import re
 import time
 
-files_types = ['.gsa', '.dat']
+import numpy as np
+from bluesky.utils import new_uid
 
+files_types = ['.gsa', '.dat']
 gsas_parser_list = [
     ('bt_wavelength', 0, 'Wavelength: (.+?) Angstrom',
      ('Wavelength:', 'Angstrom'), float),
@@ -141,10 +140,4 @@ def parse(file_dir):
                        'time': time.time()}
 
 
-if __name__ == '__main__':
-    from nomad.pipeline import source, filename_name_nodes
-    root_path = '.'
-    for n in filename_name_nodes.values():
-        n.kwargs.update(root=root_path)
-    for n, d in parse('/home/christopher/dev/17ly_NOMADpipeline/data'):
-        source.emit((n, d))
+root_path = '.'
