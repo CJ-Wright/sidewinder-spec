@@ -25,7 +25,7 @@ def create_parser():
 
     for facility in FACILITY_PARSER_MAP:
         a = subp.add_parser(facility,
-                            help='parse data from {}'.format(facility))
+                            help='parse data from {}'.format(facility.upper()))
         a.add_argument('db_name', help='name of databroker to add data to')
         a.add_argument('input_data',
                        help='path to data on disk (potentially including'
