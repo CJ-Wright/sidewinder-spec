@@ -36,9 +36,8 @@ def create_parser():
 def main(args=None):
     parser = create_parser()
     ns = parser.parse_args(args)
-    d = ns.__dict_
     if ns.cmd in FACILITY_PARSER_MAP:
-        db = Broker.named(d['db_name'])
+        db = Broker.named(ns['db_name'])
         db_path = db.get_config()['metadatastore']['config']['directory']
         writer = NpyWriter(db.fs, db_path)
         for n, di in FACILITY_PARSER_MAP[ns.cmd]['cmd'](ns['input_data']):
