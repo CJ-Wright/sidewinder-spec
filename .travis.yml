@@ -44,7 +44,7 @@ script:
   - sidewind -h
   - sidewind init test .
   - sidewind nomad -h
-  - flake8 xpdtools
+  - flake8 sidewinder_spec
 #  - conda install --yes --file requirements/docs.txt
 #  - pip install git+git://github.com/drdoctr/doctr.git
 #  - cd docs
