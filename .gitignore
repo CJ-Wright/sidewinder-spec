@@ -70,7 +70,6 @@ docs/_build/
 *.am
 *.tiff
 *.tif
-*.dat
 *.DAT
 .idea
 pyiid/grad_test.txt
