@@ -9,5 +9,6 @@ setup(
     author='Christopher J. Wright',
     author_email='cjwright4242@gmail.com',
     description='',
-    scripts=['scripts/sidewind']
+    scripts=['scripts/sidewind'],
+    package_data={'sidewinder_spec.data': ['nomad/*']}
 )

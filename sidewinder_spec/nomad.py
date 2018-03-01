@@ -94,7 +94,10 @@ def parse(file_dir):
 
         full_prof_root = os.path.join(file_dir, 'fullprof')
 
-        a = gsas_file.split('_')
+        if '_' in gsas_file:
+            a = gsas_file.split('_')
+        else:
+            a = gsas_file.split('.')
         with open(os.path.join(gsas_root, gsas_file), 'r') as f:
             start_doc.update(gsas_header_subparser(f.read()))
         bank_info = {}
@@ -104,15 +107,17 @@ def parse(file_dir):
                 bank_info[bank - 1] = parse_bank_data(
                     data[data.index('# Data for spectrum '
                                     ':{}'.format(bank)) - 1])
+        print(a)
         start_doc['sample_name'] = a[1]
         start_doc['composition_string'] = a[1]
         if 'gas' in a:
             start_doc.update({'gas': a[3]})
         if 'dry' in a:
             start_doc.update({'dry': True})
-        if 'C' in a[6]:
+        if len(a) > 5 and 'C' in a[6]:
             start_doc.update({'temperature': a[6].replace('C', '')})
-        start_doc.update({'cycle': a[-1].split('cycle')[1].split('.')[0]})
+        if 'cycle' in gsas_file:
+            start_doc.update({'cycle': a[-1].split('cycle')[1].split('.')[0]})
         yield 'start', start_doc
 
         for bank in range(6):
