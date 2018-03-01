@@ -1,11 +1,10 @@
-import h5py
-from bluesky.utils import new_uid
-import numpy as np
-from shed.savers import NpyWriter
-
-from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
 import time
 from pprint import pprint
+
+import h5py
+import numpy as np
+from bluesky.utils import new_uid
+from pyFAI import AzimuthalIntegrator
 
 
 def format_keys(*args):
@@ -14,16 +13,32 @@ def format_keys(*args):
 
 key_data_map = {'RayMX': 'image', 'photodiode': 'I0', 'eh1_qbpm1': 'eh1_qbpm1',
                 'oh_qbpm2': 'oh_qbpm2'}
-
 ai = AzimuthalIntegrator(wavelength=(12.398 / 9.70803 * 1.0e-10))
+# TODO: need to load this info from somewhere!
 ai.setFit2D(60.550, 1440.364, (2880 - -26.378), tilt=(-0.024),
             tiltPlanRotation=54.442, pixelX=78, pixelY=78)
 calib_config_dict = dict(ai.getPyFAI())
 
 
 def parse_hdf5(fn):
+    """Parse hdf5 file from the PAL-XFEL beamline into an event stream
+
+    Parameters
+    ----------
+    fn: str
+        The path to the hdf5 file
+
+    Yields
+    -------
+    name: str
+        The name of the document
+    doc: dict
+        The event model document
+    """
+
     f = h5py.File(fn, 'r')
     suid = new_uid()
+
     # loop through the scans
     for scans in f.keys():
         # Create start doc
@@ -40,6 +55,7 @@ def parse_hdf5(fn):
             'bt_wavelength': (12.398 / 9.70803 * 1.0e-10)
         }
         yield 'start', start_doc
+
         # Create most of the descriptor
         duid = new_uid()
         descriptor_doc = {'uid': duid,
@@ -120,44 +136,6 @@ def parse_hdf5(fn):
                 assert i == e['data']['shot_number']
                 yield 'event', e
 
-        yield 'stop', {'uid': new_uid(), 'run_start': suid,
+        yield 'stop', {'uid': new_uid(),
+                       'run_start': suid,
                        'time': time.time()}
-
-
-if __name__ == '__main__':
-    # from bluesky.callbacks.broker import LiveImage
-    from databroker.broker import Broker
-    # import matplotlib.pyplot as plt
-
-    # li = LiveImage('image', cmap='viridis',
-    #                limit_func=lambda im: (
-    #                    np.nanpercentile(im, 1),
-    #                    np.nanpercentile(im, 99)
-    #                ))
-    db_path = '/media/christopher/DATA/Research/Columbia/pal/db'
-    config = {'description': 'lightweight personal database',
-              'metadatastore': {'module': 'databroker.headersource.sqlite',
-                                'class': 'MDS',
-                                'config': {'directory': db_path,
-                                           'timezone': 'US/Eastern'}},
-              'assets': {'module': 'databroker.assets.sqlite',
-                         'class': 'Registry',
-                         'config': {'dbpath': db_path + '/database.sql'}}}
-
-    db = Broker.from_config(config)
-    writer = NpyWriter(db.fs, db_path)
-
-    for n, d in parse_hdf5('/media/christopher/DATA/Research/'
-                           'Columbia/pal/20170919_run420.h5'):
-        if n == 'descriptor':
-            d['data_keys']['image']['external'] = True
-        if n == 'event':
-            d['data']['image'] = writer.write(d['data']['image'])
-            d['filled']['image'] = False
-        print(n)
-        pprint(d)
-        db.insert(n, d)
-        # li(n, d)
-        # plt.pause(1)
-        # if n == 'event':
-        #     print(d['data']['image'].shape)
