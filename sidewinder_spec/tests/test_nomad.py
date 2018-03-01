@@ -7,4 +7,4 @@ def test_nomad_parser():
     for n, d in parse(fp):
         assert n in {'start', 'descriptor', 'event', 'stop'}
         assert isinstance(d, dict)
-
+    assert n
