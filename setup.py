@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='SHEDsidewinder',
+    name='shed_sidewinder',
     version='0.0.2',
     packages=find_packages(),
     url='',
