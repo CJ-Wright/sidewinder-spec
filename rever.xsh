@@ -1,4 +1,4 @@
-$PROJECT = 'SHED-sidewinder'
+$PROJECT = 'SHEDsidewinder'
 $ACTIVITIES = ['version_bump',
                'changelog',
                'tag',
