@@ -8,4 +8,4 @@ def time_from_epoch(dt, epoch=unix_epoch):
     return (dt - epoch).total_seconds()
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
