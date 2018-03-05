@@ -21,18 +21,8 @@ before_install:
   - ./miniconda.sh -b -p ~/mc
   - export PATH=~/mc/bin:$PATH
   - conda config --set always_yes yes --set changeps1 no --set quiet true
-  - conda update conda --yes
   - conda config --add channels conda-forge
-  # Set up config for MDS and FS.
-  - export MDS_HOST=localhost
-  - export MDS_DATABASE=test
-  - export MDS_TIMEZONE=US/Eastern
-  - mkdir -p /home/travis/.config/metadatastore
-  - 'echo ''port: 27017'' > /home/travis/.config/metadatastore/connection.yml'
-  - export FS_HOST=localhost
-  - export FS_DATABASE=test
-  - mkdir -p /home/travis/.config/filestore
-  - 'echo ''port: 27017'' > /home/travis/.config/filestore/connection.yml'
+  - conda update conda --yes
 
 install:
   - export GIT_FULL_HASH=`git rev-parse HEAD`
@@ -45,5 +35,19 @@ install:
 
 
 script:
-# No test as of yet
-  - true
+  - conda install --file requirements/run.txt
+  - conda install --yes --file requirements/test.txt
+  - pip install codecov pytest-env
+  - coverage run run_tests.py
+  - coverage report -m
+  - codecov
+  - sidewind -h
+  - sidewind init test .
+  - sidewind nomad -h
+  - flake8 shed_sidewinder
+#  - conda install --yes --file requirements/docs.txt
+#  - pip install git+git://github.com/drdoctr/doctr.git
+#  - cd docs
+#  - make html
+#  - cd ..
+#  - doctr deploy . --built-docs ./docs/_build/html;

@@ -1,0 +1,15 @@
+[run]
+source = 
+    shed_sidewinder
+[report]
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    # ignore _version.py and versioneer.py
+    .*version.*
+    *_version.py
+    */tests/utils.py
+
+exclude_lines =
+    if __name__ == '__main__':
+    pragma: no cover

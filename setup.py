@@ -1,13 +1,14 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name='sidewinder-spec',
+    name='SHED-sidewinder',
     version='',
-    packages=['sidewinder_spec', 'sidewinder_spec.utils',
-              'sidewinder_spec.side_loader'],
+    packages=find_packages(),
     url='',
     license='',
     author='Christopher J. Wright',
-    author_email='wright1@email.sc.edu',
-    description=''
+    author_email='cjwright4242@gmail.com',
+    description='',
+    scripts=['scripts/sidewind'],
+    package_data={'shed_sidewinder.data': ['nomad/*']}
 )
