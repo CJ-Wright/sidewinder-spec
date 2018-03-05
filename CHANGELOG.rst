@@ -1,5 +1,5 @@
 ==========================
-sidewinder-spec Change Log
+SHED-sidewinder Change Log
 ==========================
 
 .. current developments

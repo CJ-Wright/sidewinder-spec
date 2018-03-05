@@ -1,3 +1,3 @@
 #!/user/bin/env python
-from sidewinder_spec.main import main
+from shed_sidewinder.main import main
 main()

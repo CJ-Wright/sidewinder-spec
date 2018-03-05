@@ -1,12 +1,12 @@
-.. sidewinder-spec documentation master file, created by
+.. SHED-sidewinder documentation master file, created by
    sphinx-quickstart on Wed Feb 28 12:46:40 2018.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to sidewinder-spec's documentation!
+Welcome to SHED-sidewinder's documentation!
 ===========================================
 
-sidewinder-spec is a project for side loading data from synchrotron and other
+SHED-sidewinder is a project for side loading data from synchrotron and other
 beam studies into a databroker.
 
 Quickstart
@@ -41,7 +41,7 @@ file containing the data.
    :maxdepth: 4
    :caption: Contents:
 
-   sidewinder_spec
+   shed_sidewinder
 
 
 Indices and tables

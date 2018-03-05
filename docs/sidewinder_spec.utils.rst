@@ -7,7 +7,7 @@ Submodules
 sidewinder\_spec\.utils\.handlers module
 ----------------------------------------
 
-.. automodule:: sidewinder_spec.utils.handlers
+.. automodule:: shed_sidewinder.utils.handlers
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ sidewinder\_spec\.utils\.handlers module
 sidewinder\_spec\.utils\.parsers module
 ---------------------------------------
 
-.. automodule:: sidewinder_spec.utils.parsers
+.. automodule:: shed_sidewinder.utils.parsers
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ sidewinder\_spec\.utils\.parsers module
 Module contents
 ---------------
 
-.. automodule:: sidewinder_spec.utils
+.. automodule:: shed_sidewinder.utils
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# sidewinder-spec documentation build configuration file, created by
+# SHED-sidewinder documentation build configuration file, created by
 # sphinx-quickstart on Wed Feb 28 12:46:40 2018.
 #
 # This file is execfile()d with the current directory set to its
@@ -19,7 +19,7 @@
 #
 # import os
 # import sys
-# sys.path.insert(0, '/home/christopher/dev/sidewinder-spec/sidewinder_spec')
+# sys.path.insert(0, '/home/christopher/dev/SHED-sidewinder/shed_sidewinder')
 
 
 # -- General configuration ------------------------------------------------
@@ -48,7 +48,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'sidewinder-spec'
+project = 'SHED-sidewinder'
 copyright = '2018, Author'
 author = 'Author'
 
@@ -114,7 +114,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'sidewinder-specdoc'
+htmlhelp_basename = 'SHED-sidewinderdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -141,7 +141,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'sidewinder-spec.tex', 'sidewinder-spec Documentation',
+    (master_doc, 'SHED-sidewinder.tex', 'SHED-sidewinder Documentation',
      'Author', 'manual'),
 ]
 
@@ -151,7 +151,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'sidewinder-spec', 'sidewinder-spec Documentation',
+    (master_doc, 'SHED-sidewinder', 'SHED-sidewinder Documentation',
      [author], 1)
 ]
 
@@ -162,8 +162,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'sidewinder-spec', 'sidewinder-spec Documentation',
-     author, 'sidewinder-spec', 'One line description of project.',
+    (master_doc, 'SHED-sidewinder', 'SHED-sidewinder Documentation',
+     author, 'SHED-sidewinder', 'One line description of project.',
      'Miscellaneous'),
 ]
 

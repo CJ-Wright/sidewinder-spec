@@ -6,8 +6,8 @@ Subpackages
 
 .. toctree::
 
-    sidewinder_spec.side_loader
-    sidewinder_spec.utils
+    shed_sidewinder.side_loader
+    shed_sidewinder.utils
 
 Submodules
 ----------
@@ -15,7 +15,7 @@ Submodules
 sidewinder\_spec\.nomad module
 ------------------------------
 
-.. automodule:: sidewinder_spec.nomad
+.. automodule:: shed_sidewinder.nomad
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ sidewinder\_spec\.nomad module
 sidewinder\_spec\.pal\_xfel module
 ----------------------------------
 
-.. automodule:: sidewinder_spec.pal_xfel
+.. automodule:: shed_sidewinder.pal_xfel
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,7 +32,7 @@ sidewinder\_spec\.pal\_xfel module
 Module contents
 ---------------
 
-.. automodule:: sidewinder_spec
+.. automodule:: shed_sidewinder
     :members:
     :undoc-members:
     :show-inheritance:

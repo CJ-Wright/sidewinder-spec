@@ -6,8 +6,8 @@ from databroker import Broker
 from shed.savers import NpyWriter
 import yaml
 
-from sidewinder_spec.nomad import parse as nomad_parse
-from sidewinder_spec.pal_xfel import parse_hdf5 as pal_parse
+from shed_sidewinder.nomad import parse as nomad_parse
+from shed_sidewinder.pal_xfel import parse_hdf5 as pal_parse
 
 FACILITY_PARSER_MAP = {'nomad': {'cmd': nomad_parse,
                                  'externals': ['tof', 'intensity', 'error']},

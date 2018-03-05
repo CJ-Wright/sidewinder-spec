@@ -7,7 +7,7 @@ Submodules
 sidewinder\_spec\.side\_loader\.loader module
 ---------------------------------------------
 
-.. automodule:: sidewinder_spec.side_loader.loader
+.. automodule:: shed_sidewinder.side_loader.loader
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ sidewinder\_spec\.side\_loader\.loader module
 sidewinder\_spec\.side\_loader\.loaders module
 ----------------------------------------------
 
-.. automodule:: sidewinder_spec.side_loader.loaders
+.. automodule:: shed_sidewinder.side_loader.loaders
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ sidewinder\_spec\.side\_loader\.loaders module
 Module contents
 ---------------
 
-.. automodule:: sidewinder_spec.side_loader
+.. automodule:: shed_sidewinder.side_loader
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,4 +1,4 @@
-$PROJECT = 'sidewinder-spec'
+$PROJECT = 'SHED-sidewinder'
 $ACTIVITIES = ['version_bump',
                'changelog',
                'tag',
@@ -7,7 +7,7 @@ $ACTIVITIES = ['version_bump',
                'ghrelease']
 
 $VERSION_BUMP_PATTERNS = [
-    ($PROJECT + '/__init__.py', '__version__\s*=.*', "__version__ = '$VERSION'"),
+    ('shed_sidewinder' + '/__init__.py', '__version__\s*=.*', "__version__ = '$VERSION'"),
     ('setup.py', 'version\s*=.*,', "version='$VERSION',")
     ]
 $CHANGELOG_FILENAME = 'CHANGELOG.rst'
