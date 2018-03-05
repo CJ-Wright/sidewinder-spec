@@ -1,4 +1,4 @@
-SHED-sidewinder
+SHEDsidewinder
 ===============
 
 Translator from beam studies into databroker

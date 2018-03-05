@@ -3,7 +3,7 @@ sudo: false
 
 env:
   global:
-    # Doctr deploy key for xpdAcq/SHED-sidewinder
+    # Doctr deploy key for xpdAcq/SHEDsidewinder
     - secure: "RuTv22W0qeK9N2i8MFHaT6EilLIsSCo3d7NvreG0DHKMSDY9HDC3a5TLqy8z6BhaAts7IhLnHV0HmLolwLBFOoaj6FV/uD8eZwSMsOoCjaotvGfkf+ULlIUqjbdDPd424VonKV1Ezy+rl/6SiPta/cus0utRnZOZ08x+EGXfoiziXdNZygiMSdnsxAY2x6imcM26pTXa4nwXl3O6WQ4oyzAYlt/V1ic6Y7WCDLE+W3P+5MItAgy9SLnd+ifosKvU9hrBizGn5IB4akxGR5bAInQIO6pX83nDwWJBYIJuROQm5Zutmd0MgmvXd/alk+ioXsad+bGLgwbFcB+GM/j/sX/XP2MBygA9QAQESHokw1YAdM9hR+RngR/beSk4UfEmIBdZLfNt29Fi/c2vVFZt4Kfxcaoeb8U+su8X9xXZ5U0KIqijUYO2YoqHdBiPtmtBoX/2tVgyQaEXpSeOAXzVSpbn2uqlS+QH8qIncxVynKNbYwM4XqO4S19ENfz+PB+MXC9rWuHtE760c/BzLFNumXFxfVtLnbtUoBSE/0IUHnLlO/w4CIKk9e90i7vzhdA1Rv+/OWHJ/sRWxklYBhuhsmToSC57liVVtw5rN+jEKVcMItdB3RRrbXweopnDU2LjTgobmrjAGC0QRT5wWKr8PS8v0EUYnMhbUUBWNCf1diM="
 
 
