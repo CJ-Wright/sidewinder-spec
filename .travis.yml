@@ -1,6 +1,12 @@
 language: python
 sudo: false
 
+env:
+  global:
+    # Doctr deploy key for xpdAcq/sidewinder-spec
+    - secure: "CV3jgQDEbVRB9Ey+BUdLS1qn1YCJ/BjizcTB5j0lmtV8K0QhbfGzzTlNtrsrAgCxXm9FahM7+ghbs7Ya2eZLytFwekVpHLxm0lMRgQF5QwFsL91JZgqxBVYzvQgR1lWbr3is22ZipMDJYAnkzqhNSPku7jLcE0GpwzfMfHryHvyGKmjKpSr3GKtRRFzj8v5YwbzI+sX6HE1V2NOV4Xu5q9b65hMU9KWQifxTMxB4FiBA/NEnZWay4IehotWcyao8PgniRYFNEwLR2r1xooZsqP6J9J7w6lL95Wg0Oc4PS0a2XAwJYWlslgngnWWvxzeZgxn1l4M9lUZSYe5Yq+++EX+n7asW1vxohsjPEvaMb6CuLEgvedYA/gNRuY8onI0lQ3D2Nez4ZO3u4dbEwUNTek7yfVHdLOBdh1lyVLnOUPP9kviApkfWb6EcNPE2Xwy+Qp7ibfurSF5yjuZp8ZJ/M4UwaMwWrRtr5muxZRtchdBkPYuGv+NQM7/5Q67IeeAiYfxxvM/LVXJn+pfbDCWGhUTZfPLYiSNR7+QUeelsszSmRAeNW4gbXzivNa80AGCx+0MvfAK4TXWNGYNcAUiYtQA4e8ycae7EZ3h/DPvECL1b9EPcb0K2UXLQe3LZfRszjinStFQnzTMndqjyjzJB7fJwW1gHEhKjgaPLUnyRCYI="
+
+
 services:
   - mongodb
 addons:
@@ -45,9 +51,9 @@ script:
   - sidewind init test .
   - sidewind nomad -h
   - flake8 shed_sidewinder
-#  - conda install --yes --file requirements/docs.txt
-#  - pip install git+git://github.com/drdoctr/doctr.git
-#  - cd docs
-#  - make html
-#  - cd ..
-#  - doctr deploy . --built-docs ./docs/_build/html;
+  - conda install --yes --file requirements/docs.txt
+  - pip install git+git://github.com/drdoctr/doctr.git
+  - cd docs
+  - make html
+  - cd ..
+  - doctr deploy . --built-docs ./docs/_build/html;
