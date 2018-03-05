@@ -6,7 +6,9 @@ Translator from beam studies into databroker
 Install
 =======
 
-conda install -c SHED-sidewinder
+.. code-block:: sh
+
+   conda install -c SHED-sidewinder
 
 Quickstart
 ==========
