@@ -1,0 +1,242 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>shed_sidewinder.nomad &#8212; SHED-sidewinder  documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for shed_sidewinder.nomad</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">bluesky.utils</span> <span class="k">import</span> <span class="n">new_uid</span>
+
+<span class="n">FILE_TYPES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;.gsa&#39;</span><span class="p">,</span> <span class="s1">&#39;.dat&#39;</span><span class="p">]</span>
+<span class="n">GSAS_PARSER_LIST</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;bt_wavelength&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;Wavelength: (.+?) Angstrom&#39;</span><span class="p">,</span>
+     <span class="p">(</span><span class="s1">&#39;Wavelength:&#39;</span><span class="p">,</span> <span class="s1">&#39;Angstrom&#39;</span><span class="p">),</span> <span class="nb">float</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;Sample Run: (.+?) &#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;Sample Run: &#39;</span><span class="p">,),</span> <span class="nb">int</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;IPTS&#39;</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="s1">&#39;IPTS-(.+?)&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;IPTS-&#39;</span><span class="p">,),</span> <span class="nb">int</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;primary flight path&#39;</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="s1">&#39;Primary flight path (.+?)m&#39;</span><span class="p">,</span>
+     <span class="p">(</span><span class="s1">&#39;Primary flight path &#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">),</span> <span class="nb">float</span><span class="p">),</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="gsas_header_subparser"><a class="viewcode-back" href="../../sidewinder_spec.html#shed_sidewinder.nomad.gsas_header_subparser">[docs]</a><span class="k">def</span> <span class="nf">gsas_header_subparser</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse GSAS header into top level metadata&quot;&quot;&quot;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">gsas_data</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[:</span><span class="mi">14</span><span class="p">]</span>
+    <span class="n">gsas_data</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;# &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">gsas_data</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re_string</span><span class="p">,</span> <span class="n">strips</span><span class="p">,</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">GSAS_PARSER_LIST</span><span class="p">:</span>
+        <span class="n">re_res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">re_string</span><span class="p">,</span> <span class="n">gsas_data</span><span class="p">[</span><span class="n">line</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">re_res</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">re_res</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">strip</span> <span class="ow">in</span> <span class="n">strips</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="n">strip</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">dtype</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">output</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;wavelength unit&#39;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;primary flight path unit&#39;</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;total flight path unit&#39;</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;tth unit&#39;</span><span class="p">:</span> <span class="s1">&#39;deg&#39;</span>
+                   <span class="p">})</span>
+</div>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="n">BANK_PARSER_LIST</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;total flight path&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="s1">&#39;Total flight path[ </span><span class="se">\t</span><span class="s1">]+(.+?)m&#39;</span><span class="p">,</span>
+                     <span class="p">(</span><span class="s1">&#39;Total flight path   &#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">),</span> <span class="nb">float</span><span class="p">),</span>
+                    <span class="p">(</span><span class="s1">&#39;tth&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="s1">&#39;tth[ </span><span class="se">\t</span><span class="s1">]+(.+?)deg&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;tth   &#39;</span><span class="p">,</span> <span class="s1">&#39;deg&#39;</span><span class="p">),</span>
+                     <span class="nb">float</span><span class="p">),</span> <span class="p">]</span>
+
+
+<div class="viewcode-block" id="parse_bank_data"><a class="viewcode-back" href="../../sidewinder_spec.html#shed_sidewinder.nomad.parse_bank_data">[docs]</a><span class="k">def</span> <span class="nf">parse_bank_data</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the bank information from the GSAS file&quot;&quot;&quot;</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;# &#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">re_string</span><span class="p">,</span> <span class="n">strips</span><span class="p">,</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="n">BANK_PARSER_LIST</span><span class="p">:</span>
+        <span class="n">re_res</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">re_string</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">re_res</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">re_res</span><span class="o">.</span><span class="n">group</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">strip</span> <span class="ow">in</span> <span class="n">strips</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="n">strip</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">dtype</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">output</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;total flight path unit&#39;</span><span class="p">:</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span>
+                   <span class="s1">&#39;tth unit&#39;</span><span class="p">:</span> <span class="s1">&#39;deg&#39;</span>
+                   <span class="p">})</span>
+</div>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<div class="viewcode-block" id="parse"><a class="viewcode-back" href="../../sidewinder_spec.html#shed_sidewinder.nomad.parse">[docs]</a><span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="n">file_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse a folder full of GSAS and FullProf filesfrom the NOMAD beamline</span>
+<span class="sd">    into an event stream</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_dir: str</span>
+<span class="sd">        The path to the folder containing the data</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    -------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        The name of the document</span>
+<span class="sd">    doc: dict</span>
+<span class="sd">        The event model document</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gsas_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dir</span><span class="p">,</span> <span class="s1">&#39;GSAS&#39;</span><span class="p">)</span>
+    <span class="n">gsas_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">gsas_root</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.gsa&#39;</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">gsas_file</span> <span class="ow">in</span> <span class="n">gsas_files</span><span class="p">:</span>
+        <span class="n">suid</span> <span class="o">=</span> <span class="n">new_uid</span><span class="p">()</span>
+        <span class="n">start_doc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;facility&#39;</span><span class="p">:</span> <span class="s1">&#39;NOMAD&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="n">suid</span><span class="p">,</span>
+                     <span class="s1">&#39;sideloaded&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                     <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
+                     <span class="s1">&#39;filename&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">gsas_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]}</span>
+
+        <span class="n">full_prof_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_dir</span><span class="p">,</span> <span class="s1">&#39;fullprof&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">gsas_file</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">gsas_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">gsas_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">gsas_root</span><span class="p">,</span> <span class="n">gsas_file</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">start_doc</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">gsas_header_subparser</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()))</span>
+        <span class="n">bank_info</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">gsas_root</span><span class="p">,</span> <span class="n">gsas_file</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">bank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
+                <span class="n">bank_info</span><span class="p">[</span><span class="n">bank</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_bank_data</span><span class="p">(</span>
+                    <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;# Data for spectrum &#39;</span>
+                                    <span class="s1">&#39;:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bank</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">start_doc</span><span class="p">[</span><span class="s1">&#39;sample_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">start_doc</span><span class="p">[</span><span class="s1">&#39;composition_string&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;gas&#39;</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
+            <span class="n">start_doc</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;gas&#39;</span><span class="p">:</span> <span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">]})</span>
+        <span class="k">if</span> <span class="s1">&#39;dry&#39;</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
+            <span class="n">start_doc</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;dry&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span> <span class="ow">and</span> <span class="s1">&#39;C&#39;</span> <span class="ow">in</span> <span class="n">a</span><span class="p">[</span><span class="mi">6</span><span class="p">]:</span>
+            <span class="n">start_doc</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;temperature&#39;</span><span class="p">:</span> <span class="n">a</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)})</span>
+        <span class="k">if</span> <span class="s1">&#39;cycle&#39;</span> <span class="ow">in</span> <span class="n">gsas_file</span><span class="p">:</span>
+            <span class="n">start_doc</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;cycle&#39;</span><span class="p">:</span> <span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;cycle&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]})</span>
+        <span class="k">yield</span> <span class="s1">&#39;start&#39;</span><span class="p">,</span> <span class="n">start_doc</span>
+
+        <span class="k">for</span> <span class="n">bank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="n">duid</span> <span class="o">=</span> <span class="n">new_uid</span><span class="p">()</span>
+            <span class="n">descriptor_doc</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="n">duid</span><span class="p">,</span>
+                              <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;bank </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bank</span><span class="p">),</span>
+                              <span class="s1">&#39;run_start&#39;</span><span class="p">:</span> <span class="n">suid</span><span class="p">,</span>
+                              <span class="s1">&#39;data_keys&#39;</span><span class="p">:</span>
+                                  <span class="p">{</span><span class="s1">&#39;tof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;file&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;array&#39;</span><span class="p">,</span>
+                                           <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;time&#39;</span><span class="p">},</span>
+                                   <span class="s1">&#39;intensity&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;file&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;array&#39;</span><span class="p">,</span>
+                                                 <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;arb&#39;</span><span class="p">},</span>
+                                   <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;file&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;array&#39;</span><span class="p">,</span>
+                                             <span class="s1">&#39;unit&#39;</span><span class="p">:</span> <span class="s1">&#39;arb&#39;</span><span class="p">}</span>
+                                   <span class="p">},</span>
+                              <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()}</span>
+            <span class="n">descriptor_doc</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">bank_info</span><span class="p">[</span><span class="n">bank</span><span class="p">])</span>
+            <span class="k">yield</span> <span class="s1">&#39;descriptor&#39;</span><span class="p">,</span> <span class="n">descriptor_doc</span>
+            <span class="n">full_prof_file_name</span> <span class="o">=</span> <span class="n">gsas_file</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.gsa&#39;</span><span class="p">,</span>
+                                                    <span class="s1">&#39;-</span><span class="si">{}</span><span class="s1">.dat&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bank</span><span class="p">))</span>
+            <span class="n">tof</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">full_prof_root</span><span class="p">,</span>
+                                                  <span class="n">full_prof_file_name</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="n">new_uid</span><span class="p">(),</span>
+                     <span class="s1">&#39;descriptor&#39;</span><span class="p">:</span> <span class="n">duid</span><span class="p">,</span>
+                     <span class="s1">&#39;filled&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;tof&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                <span class="s1">&#39;intensity&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>
+                     <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;tof&#39;</span><span class="p">:</span> <span class="n">tof</span><span class="p">,</span>
+                              <span class="s1">&#39;intensity&#39;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                              <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">err</span><span class="p">},</span>
+                     <span class="s1">&#39;timestamps&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;tof&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
+                                    <span class="s1">&#39;intensity&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
+                                    <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()},</span>
+                     <span class="s1">&#39;seq_num&#39;</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span>
+                     <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span>
+                     <span class="p">}</span>
+            <span class="k">yield</span> <span class="s1">&#39;event&#39;</span><span class="p">,</span> <span class="n">event</span>
+        <span class="k">yield</span> <span class="s1">&#39;stop&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;uid&#39;</span><span class="p">:</span> <span class="n">new_uid</span><span class="p">(),</span> <span class="s1">&#39;run_start&#39;</span><span class="p">:</span> <span class="n">suid</span><span class="p">,</span></div>
+                       <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()}</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  <li><a href="../shed_sidewinder.html">shed_sidewinder</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Author.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
