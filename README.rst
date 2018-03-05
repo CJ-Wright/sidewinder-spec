@@ -1,4 +1,4 @@
-sidewinder-spec
+SHED-sidewinder
 ===============
 
 Translator from beam studies into databroker
@@ -6,7 +6,7 @@ Translator from beam studies into databroker
 Install
 =======
 
-conda install -c sidewinder-spec
+conda install -c SHED-sidewinder
 
 Quickstart
 ==========

@@ -1,6 +1,6 @@
 [run]
 source = 
-    sidewinder_spec
+    shed_sidewinder
 [report]
 omit =
     */python?.?/*

@@ -4,7 +4,7 @@ from pprint import pprint
 from databroker.broker import Broker
 from shed.savers import NpyWriter
 
-from sidewinder_spec.nomad import parse
+from shed_sidewinder.nomad import parse
 
 db_path = '/path/to/db'
 config = {'description': 'lightweight personal database',

@@ -93,9 +93,9 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/sidewinder-spec.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/SHED-sidewinder.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/sidewinder-spec.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/SHED-sidewinder.qhc"
 
 .PHONY: applehelp
 applehelp:
@@ -112,8 +112,8 @@ devhelp:
 	@echo
 	@echo "Build finished."
 	@echo "To view the help file:"
-	@echo "# mkdir -p $$HOME/.local/share/devhelp/sidewinder-spec"
-	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/sidewinder-spec"
+	@echo "# mkdir -p $$HOME/.local/share/devhelp/SHED-sidewinder"
+	@echo "# ln -s $(BUILDDIR)/devhelp $$HOME/.local/share/devhelp/SHED-sidewinder"
 	@echo "# devhelp"
 
 .PHONY: epub
