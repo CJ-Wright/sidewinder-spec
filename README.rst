@@ -8,7 +8,7 @@ Install
 
 .. code-block:: sh
 
-   conda install -c SHED-sidewinder
+   conda install -c shed_sidewinder
 
 Quickstart
 ==========
