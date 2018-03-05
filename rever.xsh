@@ -3,8 +3,9 @@ $ACTIVITIES = ['version_bump',
                'changelog',
                'tag',
                'push_tag',
-               'conda_forge',
-               'ghrelease']
+               'ghrelease',
+               'conda_forge'
+]
 
 $VERSION_BUMP_PATTERNS = [
     ('shed_sidewinder' + '/__init__.py', '__version__\s*=.*', "__version__ = '$VERSION'"),
