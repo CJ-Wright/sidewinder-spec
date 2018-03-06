@@ -4,11 +4,8 @@ setup(
     name='shed-sidewinder',
     version='0.0.4',
     packages=find_packages(),
-    url='',
-    license='',
     author='Christopher J. Wright',
     author_email='cjwright4242@gmail.com',
-    description='',
-    scripts=['scripts/sidewind'],
+    entry_points={'console_scripts': 'sidewind = shed_sidewinder.main:main'},
     package_data={'shed_sidewinder.data': ['nomad/*']}
 )
